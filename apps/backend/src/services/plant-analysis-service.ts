@@ -79,7 +79,7 @@ export async function analyzePlantImage(
         responseJsonSchema,
         temperature: 0.2,
         // extraction task, deep reasoning only adds latency
-        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
       },
     });
     text = response.text;
