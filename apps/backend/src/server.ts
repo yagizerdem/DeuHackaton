@@ -1,12 +1,16 @@
 import express from "express";
 import mongoose from "mongoose";
-import { readDevEnv } from "@/read-env.js";
+import { readDevEnv, readProdEnv } from "@/read-env.js";
 import { connectDB } from "@/db.js";
 import { errorHandler } from "@middlewares/error-handler.js";
 import { authRouter } from "@routes/auth-route.js";
 
 if (process.env.NODE_ENV === "development") {
   readDevEnv();
+}
+
+if (process.env.NODE_ENV === "production") {
+  readProdEnv();
 }
 
 const mongoUri =

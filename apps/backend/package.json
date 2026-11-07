@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && tsc-alias -p tsconfig.json",
     "start": "cross-env NODE_ENV=production node dist/src/server.js",
+    "start:local": "cross-env NODE_ENV=production node --env-file=.env.prod dist/src/server.js",
     "dev": "cross-env NODE_ENV=development nodemon --watch src --ext ts,json --exec tsx src/server.ts",
     "type-check": "tsc --noEmit"
   },
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
+    "tsc-alias": "^1.9.10",
     "tsx": "^4.23.15"
   }
 }
