@@ -90,7 +90,7 @@ export default function LoginPage() {
                 </FieldGroup>
               </CardContent>
               <CardFooter className="mt-6">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full cursor-pointer">
                   Log in
                 </Button>
               </CardFooter>
