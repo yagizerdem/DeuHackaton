@@ -2,11 +2,13 @@ import { Router } from "express";
 import {
   login,
   logout,
+  me,
   refresh,
   register,
 } from "@controllers/auth-controller.js";
 import asyncWrapper from "@/utils/async-wrapper.js";
 import { validator } from "@/middlewares/validator.js";
+import { authenticate } from "@/middlewares/authenticate.js";
 import {
   createLoginValidator,
   createRegisterValidator,
@@ -214,3 +216,46 @@ authRouter.post("/logout", asyncWrapper(logout));
  *               message: Refresh token has been revoked
  */
 authRouter.post("/refresh", asyncWrapper(refresh));
+
+/**
+ * @openapi
+ * /api/auth/me:
+ *   get:
+ *     tags:
+ *       - Auth
+ *     summary: Get the current user
+ *     description: >-
+ *       Returns the data of the authenticated user. The access token is read
+ *       from the `Authorization: Bearer <token>` header or from the
+ *       `accessToken` cookie.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       "200":
+ *         description: The current user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 200
+ *               message: OK
+ *               data:
+ *                 user:
+ *                   id: 665f1c2e8b3a4d0012a4c9e1
+ *                   email: yagiz@example.com
+ *                   userName: yagiz
+ *                   gender: male
+ *                   age: 25
+ *       "401":
+ *         description: Missing, invalid or expired access token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 401
+ *               message: Authentication required
+ */
+authRouter.get("/me", authenticate, asyncWrapper(me));

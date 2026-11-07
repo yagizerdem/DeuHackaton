@@ -13,12 +13,16 @@ import {
   type TokenPair,
 } from "@/services/token-service.js";
 import { AppError } from "@/utils/app-error.js";
-import { ensureUserExistByEmail } from "@services/user-service.js";
+import {
+  ensureUserExistByEmail,
+  ensureUserExistById,
+} from "@services/user-service.js";
 import {
   TokenPairDto,
   LoginResponseDto,
   RegisterResponseDto,
   RefreshResponseDto,
+  MeResponseDto,
 } from "@DeparkHackaton/dto";
 
 function setAuthCookies(res: Response, tokens: TokenPair) {
@@ -131,4 +135,21 @@ export async function refresh(req: Request, res: Response) {
         "Tokens refreshed",
       ),
     );
+}
+
+export async function me(req: Request, res: Response) {
+  // authenticate has already verified the token and set req.user
+  const user = await ensureUserExistById(req.user!.id);
+
+  return res.status(HttpStatusCode.OK).json(
+    ApiResponse.ok<MeResponseDto>({
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        userName: user.userName,
+        gender: user.gender ?? undefined,
+        age: user.age ?? undefined,
+      },
+    }),
+  );
 }

@@ -20,6 +20,10 @@ export const swaggerSpec = swaggerJsdoc({
     openapi: "3.0.3",
     info: { title: "Depark Hackaton API", version: "1.0.0" },
     components: {
+      securitySchemes: {
+        bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+        cookieAuth: { type: "apiKey", in: "cookie", name: "accessToken" },
+      },
       schemas: {
         RegisterInput: toSchema(createRegisterValidator()),
         LoginInput: toSchema(createLoginValidator()),

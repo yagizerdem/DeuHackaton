@@ -23,3 +23,8 @@ export interface LoginResponseDto extends TokenPairDto {
 
 // data of POST /api/auth/refresh
 export type RefreshResponseDto = TokenPairDto;
+
+// data of GET /api/auth/me
+export interface MeResponseDto {
+  user: UserDto;
+}
