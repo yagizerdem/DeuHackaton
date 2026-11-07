@@ -14,7 +14,8 @@ export default defineConfig({
       "@hooks": path.resolve(import.meta.dirname, "./src/hooks"),
       "@pages": path.resolve(import.meta.dirname, "./src/pages"),
       "@providers": path.resolve(import.meta.dirname, "./src/providers"),
-      "@layouts": path.resolve(import.meta.dirname, "./src/layouts"), 
+      "@layouts": path.resolve(import.meta.dirname, "./src/layouts"),
+      "@lib": path.resolve(import.meta.dirname, "./src/lib"),
     },
   },
   server: {

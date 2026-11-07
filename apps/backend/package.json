@@ -11,11 +11,15 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@DeparkHackaton/dto": "^1.0.0",
     "@DeparkHackaton/shared": "^1.0.0",
     "@DeparkHackaton/validators": "^1.0.0",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.12.0",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
@@ -23,6 +27,9 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.14",

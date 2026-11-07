@@ -52,6 +52,7 @@ export class AppError extends Error {
   static badRequest(message = "Bad request", options: AppErrorOptions = {}) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.BAD_REQUEST,
       ...options,
     });
@@ -60,6 +61,7 @@ export class AppError extends Error {
   static unauthorized(message = "Unauthorized", options: AppErrorOptions = {}) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.UNAUTHORIZED,
       ...options,
     });
@@ -68,6 +70,7 @@ export class AppError extends Error {
   static forbidden(message = "Forbidden", options: AppErrorOptions = {}) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.FORBIDDEN,
       ...options,
     });
@@ -79,6 +82,7 @@ export class AppError extends Error {
   ) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.NOT_FOUND,
       ...options,
     });
@@ -87,6 +91,7 @@ export class AppError extends Error {
   static conflict(message = "Conflict", options: AppErrorOptions = {}) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.CONFLICT,
       ...options,
     });
@@ -98,6 +103,7 @@ export class AppError extends Error {
   ) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.UNPROCESSABLE_ENTITY,
       ...options,
     });
@@ -109,6 +115,7 @@ export class AppError extends Error {
   ) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.TOO_MANY_REQUESTS,
       ...options,
     });
@@ -132,6 +139,7 @@ export class AppError extends Error {
   ) {
     return AppError.from({
       message,
+      isOperational: true,
       httpStatusCode: HttpStatusCode.SERVICE_UNAVAILABLE,
       ...options,
     });
