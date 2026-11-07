@@ -11,12 +11,11 @@ import { toast } from "sonner";
 import API from "@lib/axios-wrapper";
 import { getApiErrorMessage } from "@lib/api-error";
 import globalEventEmitter from "@lib/event-emitter";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 
 export default function SiteHeader() {
   const [modal, setModal] = useState<"login" | "register" | null>(null);
   const { user, setUser } = useAuth();
-  const navigate = useNavigate();
 
   // close the modal once the login / register card reports success
   useEffect(() => {
@@ -45,19 +44,23 @@ export default function SiteHeader() {
   return (
     <Fragment>
       <header className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-border/30 bg-background/90 px-4 py-2 backdrop-blur-md md:px-12">
-        <div
-          className="flex items-center gap-6"
-          onMouseUp={() => {
-            navigate("/");
-          }}
-        >
-          <a href="#" className="group flex items-center gap-2">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="group flex items-center gap-2">
             <Sprout className="size-6 fill-primary/20 text-primary transition-transform group-hover:scale-105" />
             <span className="font-stitch-headline text-stitch-headline-md font-medium tracking-tight text-primary">
               Plant Protection Assistant
             </span>
-          </a>
+          </Link>
+          <nav className="ml-6 hidden items-center gap-6 md:flex">
+            <Link
+              to="/plant-protection-assistant"
+              className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Analyze
+            </Link>
+          </nav>
         </div>
+
         <div className="flex items-center gap-3">
           <ThemeToggle />
           {!user && (
