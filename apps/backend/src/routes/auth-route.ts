@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { login, logout, refresh, register } from "@controllers/auth-controller.js";
+import {
+  login,
+  logout,
+  refresh,
+  register,
+} from "@controllers/auth-controller.js";
 import asyncWrapper from "@/utils/async-wrapper.js";
 import { validator } from "@/middlewares/validator.js";
 import {

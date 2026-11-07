@@ -13,6 +13,7 @@ import {
   type TokenPair,
 } from "@/services/token-service.js";
 import { AppError } from "@/utils/app-error.js";
+import { ensureUserExistByEmail } from "@services/user-service.js";
 
 function setAuthCookies(res: Response, tokens: TokenPair) {
   const options = {
@@ -61,7 +62,8 @@ export async function register(_req: Request, _res: Response) {
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body as LoginInput;
 
-  const user = await User.findOne({ email });
+  const user = await ensureUserExistByEmail(email);
+
   const passwordMatches = await bcrypt.compare(password, user?.passwordHash!);
 
   if (!user || !passwordMatches) {
