@@ -1,11 +1,24 @@
 import express from "express";
 import mongoose from "mongoose";
+import { readDevEnv } from "@/read-env.js";
 
-const app = express();
-const port = Number(process.env.PORT ?? 3000);
+if (process.env.NODE_ENV === "development") {
+  readDevEnv();
+}
+
 const mongoUri =
   process.env.MONGODB_URI ??
-  "mongodb://user:1234@127.0.0.1:27017/depark?authSource=admin";
+  (() => {
+    throw new Error("MONGODB_URI is not defined");
+  })();
+
+const port = process.env.PORT
+  ? Number(process.env.PORT)
+  : (() => {
+      throw new Error("PORT is not defined");
+    })();
+
+const app = express();
 
 app.use(express.json());
 
