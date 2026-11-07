@@ -105,8 +105,8 @@ planAnalysisRouter.post(
  *     summary: Analyze a plant image with the knowledge base
  *     description: >-
  *       Same input as `/api/plan-analysis`, but the risk assessment is grounded
- *       in pages retrieved from the RAG knowledge base. The response also lists
- *       the `sources` (file, page, score) that were used.
+ *       in pages retrieved from the RAG knowledge base. The response has the
+ *       same shape as `/api/plan-analysis`.
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []
@@ -124,7 +124,7 @@ planAnalysisRouter.post(
  *                 format: binary
  *     responses:
  *       "200":
- *         description: Analysis, grounded assessment and the sources used
+ *         description: Analysis and the knowledge base grounded assessment
  *         content:
  *           application/json:
  *             schema:

@@ -52,7 +52,6 @@ function AssistantWorkspace() {
               <AnalysisResult
                 result={ragMutation.data}
                 title="Knowledge base analysis"
-                sources={ragMutation.data.sources}
               />
             )}
           </div>

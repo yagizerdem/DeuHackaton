@@ -46,19 +46,8 @@ export async function analyzeImageWithRag(req: Request, res: Response) {
 
   const assessment = await assessPlantRisk(analysis, sources);
 
-  return res.status(HttpStatusCode.OK).json(
-    ApiResponse.ok(
-      {
-        analysis,
-        assessment,
-        sources: sources.map(({ source, page, score, summary }) => ({
-          source,
-          page,
-          score,
-          summary,
-        })),
-      },
-      "Image analyzed",
-    ),
-  );
+  // the retrieved pages only ground the assessment, they are not part of the response
+  return res
+    .status(HttpStatusCode.OK)
+    .json(ApiResponse.ok({ analysis, assessment }, "Image analyzed"));
 }

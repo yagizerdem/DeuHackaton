@@ -36,17 +36,6 @@ export interface PlantAnalysisResult {
   assessment: PlantRiskAssessment;
 }
 
-export interface PlantKnowledgeSource {
-  source: string;
-  page: number;
-  score: number;
-  summary: string;
-}
-
-export interface PlantRagAnalysisResult extends PlantAnalysisResult {
-  sources: PlantKnowledgeSource[];
-}
-
 function imageForm(image: File) {
   const body = new FormData();
   body.append("image", image);
@@ -61,9 +50,9 @@ export async function analyzePlantImage(image: File) {
   return response.data.data!;
 }
 
-// the assessment is grounded in knowledge base pages, `sources` lists them
+// same response as analyzePlantImage, the assessment is grounded in the knowledge base
 export async function analyzePlantImageWithRag(image: File) {
-  const response = await API.post<ApiResponse<PlantRagAnalysisResult>>(
+  const response = await API.post<ApiResponse<PlantAnalysisResult>>(
     "/plan-analysis/rag",
     imageForm(image),
   );
