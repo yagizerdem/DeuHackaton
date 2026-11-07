@@ -1,0 +1,13 @@
+{
+  "name": "@depark/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@depark/shared": "*"
+  }
+}
