@@ -87,4 +87,10 @@ export async function login(req: Request, res: Response) {
   );
 }
 
-export async function logout(_req: Request, _res: Response) {}
+export async function logout(_req: Request, _res: Response) {
+  _res.clearCookie("refreshToken");
+  _res.clearCookie("accessToken");
+  return _res
+    .status(HttpStatusCode.OK)
+    .json(ApiResponse.ok(null, "Logged out successfully"));
+}

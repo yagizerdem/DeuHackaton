@@ -131,4 +131,30 @@ authRouter.post(
   asyncWrapper(login),
 );
 
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Log out the current user
+ *     description: >-
+ *       Clears the `accessToken` and `refreshToken` cookies. No request body
+ *       is needed.
+ *     responses:
+ *       "200":
+ *         description: Logged out
+ *         headers:
+ *           Set-Cookie:
+ *             description: Expires the accessToken and refreshToken cookies.
+ *             schema:
+ *               type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 200
+ *               message: Logged out successfully
+ */
 authRouter.post("/logout", asyncWrapper(logout));
