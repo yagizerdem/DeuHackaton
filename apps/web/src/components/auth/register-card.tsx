@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { cn } from "cn";
 import { type RefreshResponseDto } from "@DeparkHackaton/dto";
 import { type ApiResponse } from "@DeparkHackaton/shared";
+import { useEventEmitter } from "@hooks/use-event-emitter";
 
 const registerValidator = createRegisterValidator();
 
@@ -37,6 +38,7 @@ type FieldErrors = Partial<Record<string, string>>;
 export default function RegisterCard() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const navigate = useNavigate();
+  const { publishEvent } = useEventEmitter<{ data: boolean }>("register");
 
   const mutation = useMutation({
     mutationFn: async (input: RegisterInput) => {
@@ -57,6 +59,7 @@ export default function RegisterCard() {
           position: "top-right",
         },
       );
+      publishEvent({ data: true });
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Registration failed!"), {

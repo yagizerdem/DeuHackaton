@@ -1,15 +1,16 @@
 import { LogOut, Microscope, Sprout } from "lucide-react";
 import { Button } from "@components/ui/button";
 import ThemeToggle from "@components/theme-toggle";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import AuthModal from "@components/auth/auth-modal";
 import LoginCard from "@components/auth/login-card";
 import RegisterCard from "@components/auth/register-card";
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth } from "@providers/auth-provider";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import API from "@/lib/axios-wrapper";
-import { getApiErrorMessage } from "@/lib/api-error";
+import API from "@lib/axios-wrapper";
+import { getApiErrorMessage } from "@lib/api-error";
+import globalEventEmitter from "@lib/event-emitter";
 
 const NAV_LINKS = [
   { href: "#how-it-works", label: "How It Works" },
@@ -20,6 +21,17 @@ const NAV_LINKS = [
 export default function SiteHeader() {
   const [modal, setModal] = useState<"login" | "register" | null>(null);
   const { user, setUser } = useAuth();
+
+  // close the modal once the login / register card reports success
+  useEffect(() => {
+    const closeModal = () => setModal(null);
+    globalEventEmitter.addEventListener("login", closeModal);
+    globalEventEmitter.addEventListener("register", closeModal);
+    return () => {
+      globalEventEmitter.removeEventListener("login", closeModal);
+      globalEventEmitter.removeEventListener("register", closeModal);
+    };
+  }, []);
 
   const logoutMutation = useMutation({
     mutationFn: () => API.post("/auth/logout"),

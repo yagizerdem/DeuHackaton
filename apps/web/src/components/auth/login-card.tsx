@@ -28,6 +28,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { type ApiResponse } from "@DeparkHackaton/shared";
 import { type LoginResponseDto } from "@DeparkHackaton/dto";
+import { useEventEmitter } from "@hooks/use-event-emitter";
+import { useAuth } from "@/providers/auth-provider";
 
 const loginValidator = createLoginValidator();
 
@@ -36,6 +38,8 @@ type FieldErrors = Partial<Record<string, string>>;
 export default function LoginCard() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const navigate = useNavigate();
+  const { publishEvent } = useEventEmitter<{ data: boolean }>("login");
+  const { setUser } = useAuth();
 
   const mutation = useMutation({
     mutationFn: async (credentials: LoginInput) => {
@@ -47,10 +51,12 @@ export default function LoginCard() {
     },
     onSuccess: (data) => {
       console.log("Login successful:", data);
+      setUser(data.data!.user);
       navigate("/");
       toast.success(data.message ?? "Login successful", {
         position: "top-right",
       });
+      publishEvent({ data: true });
     },
     onError: (error) => {
       console.error("Login failed:", error);
