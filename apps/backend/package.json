@@ -8,6 +8,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@depark/shared": "*"
+    "@depark/shared": "*",
+    "mongoose": "^9.12.0"
   }
 }
