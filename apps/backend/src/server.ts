@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import { readDevEnv } from "@/read-env.js";
+import { connectDB } from "@/db.js";
 
 if (process.env.NODE_ENV === "development") {
   readDevEnv();
@@ -26,8 +27,7 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", db: mongoose.connection.readyState === 1 });
 });
 
-await mongoose.connect(mongoUri);
-console.log("MongoDB connected");
+await connectDB(mongoUri);
 
 app.listen(port, () => {
   console.log(`Backend listening on http://localhost:${port}`);
