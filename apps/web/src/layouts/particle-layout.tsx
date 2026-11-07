@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { BaseProvider } from "@providers/base-provider";
+import ThemeToggle from "@components/theme-toggle";
 
 interface ParticleLayoutProps {
   children: React.ReactNode;
@@ -59,6 +60,10 @@ function FloatingSquares() {
     const draw = () => {
       frame = requestAnimationFrame(draw);
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      // read per frame so squares follow the active light/dark theme
+      const styles = getComputedStyle(canvas);
+      const fill = styles.getPropertyValue("--stitch-secondary").trim();
+      const stroke = styles.getPropertyValue("--stitch-primary").trim();
 
       for (const s of squares) {
         s.x += s.vx;
@@ -71,9 +76,11 @@ function FloatingSquares() {
         ctx.save();
         ctx.translate(s.x + s.size / 2, s.y + s.size / 2);
         ctx.rotate(s.angle);
-        ctx.fillStyle = `rgba(129, 140, 248, ${s.alpha})`;
-        ctx.strokeStyle = `rgba(165, 180, 252, ${s.alpha + 0.1})`;
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = stroke;
+        ctx.globalAlpha = s.alpha;
         ctx.fillRect(-s.size / 2, -s.size / 2, s.size, s.size);
+        ctx.globalAlpha = s.alpha + 0.1;
         ctx.strokeRect(-s.size / 2, -s.size / 2, s.size, s.size);
         ctx.restore();
       }
@@ -93,7 +100,7 @@ function FloatingSquares() {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 size-full bg-black"
+      className="pointer-events-none fixed inset-0 -z-10 size-full bg-background"
     />
   );
 }
@@ -103,6 +110,9 @@ export default function ParticleLayout({ children }: ParticleLayoutProps) {
     <BaseProvider>
       <div className="relative isolate min-h-screen w-full">
         <FloatingSquares />
+        <div className="fixed top-4 right-4 z-10">
+          <ThemeToggle />
+        </div>
         {children}
       </div>
     </BaseProvider>
