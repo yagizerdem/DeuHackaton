@@ -24,6 +24,7 @@ import PasswordInput from "@components/password-input";
 import { useMutation } from "@tanstack/react-query";
 import API from "@/lib/axios-wrapper";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const loginValidator = createLoginValidator();
 
@@ -38,11 +39,18 @@ export default function LoginCard() {
       const response = await API.post("/auth/login", credentials);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Login successful:", data);
       navigate("/");
     },
     onError: (error) => {
       console.error("Login failed:", error);
+      toast.error(
+        error.message ?? "Login failed. Please check your credentials.",
+        {
+          position: "top-right",
+        },
+      );
     },
   });
 
