@@ -1,0 +1,19 @@
+{
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Backend: debug",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}/apps/backend",
+        "runtimeExecutable": "node",
+        "runtimeArgs": ["--import", "tsx"],
+        "program": "${workspaceFolder}/apps/backend/src/server.ts",
+        "env": { "NODE_ENV": "development" },
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+      }
+    ]
+  }
+}
