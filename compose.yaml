@@ -52,7 +52,6 @@ services:
     volumes:
       - ./rag/data:/app/data:ro
       - rag_chroma:/app/chroma
-      - rag_models:/app/.cache/huggingface
     healthcheck:
       test:
         - CMD
@@ -68,7 +67,6 @@ volumes:
   mongodb_data:
     driver: local
   rag_chroma:
-  rag_models:
 
 networks:
   mongodb_network:

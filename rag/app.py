@@ -26,9 +26,15 @@ def query():
 
     col = collection()
     if col.count() == 0:
-        return jsonify(message="The index is empty, run ingest.py first"), 503
+        return jsonify(message="The index is empty, add PDFs to rag/data and restart"), 503
 
-    found = col.query(query_embeddings=embed([text]), n_results=k)
+    try:
+        vector = embed([text], "RETRIEVAL_QUERY")
+    except Exception:
+        app.logger.exception("query embedding failed")
+        return jsonify(message="The embedding service is unavailable"), 503
+
+    found = col.query(query_embeddings=vector, n_results=k)
 
     results = [
         {
