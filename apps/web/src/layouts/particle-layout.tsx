@@ -5,12 +5,23 @@ interface ParticleLayoutProps {
   children: React.ReactNode;
 }
 
-const GLYPHS =
-  "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789";
-const FONT_SIZE = 18;
-const FRAME_MS = 50;
+const SQUARE_COUNT = 28;
+const MIN_SIZE = 24;
+const MAX_SIZE = 110;
+const MAX_SPEED = 0.6;
 
-function MatrixRain() {
+interface Square {
+  x: number;
+  y: number;
+  size: number;
+  vx: number;
+  vy: number;
+  angle: number;
+  spin: number;
+  alpha: number;
+}
+
+function FloatingSquares() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -18,40 +29,54 @@ function MatrixRain() {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    let drops: number[] = [];
+    let squares: Square[] = [];
     let frame = 0;
-    let last = 0;
+
+    const spawn = (): Square => {
+      const size = MIN_SIZE + Math.random() * (MAX_SIZE - MIN_SIZE);
+      const heading = Math.random() * Math.PI * 2;
+      const speed = 0.15 + Math.random() * MAX_SPEED;
+      return {
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        size,
+        vx: Math.cos(heading) * speed,
+        vy: Math.sin(heading) * speed,
+        angle: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.008,
+        alpha: 0.05 + Math.random() * 0.15,
+      };
+    };
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-      const columns = Math.ceil(window.innerWidth / FONT_SIZE);
-      drops = Array.from({ length: columns }, () => -Math.random() * 50);
+      squares = Array.from({ length: SQUARE_COUNT }, spawn);
     };
 
-    const draw = (now: number) => {
+    const draw = () => {
       frame = requestAnimationFrame(draw);
-      if (now - last < FRAME_MS) return;
-      last = now;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      // translucent fill leaves the fading trail
-      ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-      ctx.font = `${FONT_SIZE}px monospace`;
-      ctx.fillStyle = "#22c55e";
+      for (const s of squares) {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.angle += s.spin;
+        // bounce off every edge so squares keep floating around the screen
+        if (s.x <= 0 || s.x + s.size >= window.innerWidth) s.vx *= -1;
+        if (s.y <= 0 || s.y + s.size >= window.innerHeight) s.vy *= -1;
 
-      drops.forEach((y, i) => {
-        const glyph = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
-        ctx.fillText(glyph, i * FONT_SIZE, y * FONT_SIZE);
-        drops[i] =
-          y * FONT_SIZE > window.innerHeight && Math.random() > 0.975
-            ? 0
-            : y + 1;
-      });
+        ctx.save();
+        ctx.translate(s.x + s.size / 2, s.y + s.size / 2);
+        ctx.rotate(s.angle);
+        ctx.fillStyle = `rgba(129, 140, 248, ${s.alpha})`;
+        ctx.strokeStyle = `rgba(165, 180, 252, ${s.alpha + 0.1})`;
+        ctx.fillRect(-s.size / 2, -s.size / 2, s.size, s.size);
+        ctx.strokeRect(-s.size / 2, -s.size / 2, s.size, s.size);
+        ctx.restore();
+      }
     };
 
     resize();
@@ -77,7 +102,7 @@ export default function ParticleLayout({ children }: ParticleLayoutProps) {
   return (
     <BaseProvider>
       <div className="relative isolate min-h-screen w-full">
-        <MatrixRain />
+        <FloatingSquares />
         {children}
       </div>
     </BaseProvider>

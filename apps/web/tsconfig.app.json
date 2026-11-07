@@ -20,7 +20,8 @@
       "@assets/*": ["./src/assets/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@pages/*": ["./src/pages/*"],
-      "@providers/*": ["./src/providers/*"]
+      "@providers/*": ["./src/providers/*"],
+      "@layouts/*": ["./src/layouts/*"]
     },
     "jsx": "react-jsx",
 
