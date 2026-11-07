@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { createLoginValidator } from "@DeparkHackaton/validators";
+import {
+  createLoginValidator,
+  type LoginInput,
+} from "@DeparkHackaton/validators";
 import { Button } from "@components/ui/button";
 import {
   Card,
@@ -18,6 +21,9 @@ import {
 } from "@components/ui/field";
 import { Input } from "@components/ui/input";
 import PasswordInput from "@components/password-input";
+import { useMutation } from "@tanstack/react-query";
+import API from "@/lib/axios-wrapper";
+import { cn } from "@/lib/utils";
 
 const loginValidator = createLoginValidator();
 
@@ -26,6 +32,19 @@ type FieldErrors = Partial<Record<string, string>>;
 export default function LoginCard() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const navigate = useNavigate();
+
+  const mutation = useMutation({
+    mutationFn: async (credentials: LoginInput) => {
+      const response = await API.post("/auth/login", credentials);
+      return response.data;
+    },
+    onSuccess: () => {
+      navigate("/");
+    },
+    onError: (error) => {
+      console.error("Login failed:", error);
+    },
+  });
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,7 +66,7 @@ export default function LoginCard() {
     }
 
     setErrors({});
-    // TODO: send result.data to the login endpoint
+    mutation.mutate(result.data);
   }
 
   return (
@@ -85,13 +104,24 @@ export default function LoginCard() {
           </FieldGroup>
         </CardContent>
         <CardFooter className="mt-6">
-          <Button type="submit" className="w-full cursor-pointer">
+          <Button
+            type="submit"
+            className="w-full cursor-pointer"
+            disabled={mutation.isPending}
+          >
             Log in
           </Button>
         </CardFooter>
         <span
-          className="text-left cursor-pointer align-middle block w-full h-fit px-2 py-1"
-          onMouseUp={() => navigate("/register")}
+          className={cn(
+            "text-left cursor-pointer align-middle block w-full h-fit px-2 py-1",
+            mutation.isPending && "opacity-50 pointer-events-none",
+          )}
+          onMouseUp={() => {
+            if (!mutation.isPending) {
+              navigate("/register");
+            }
+          }}
         >
           Don't have an account? Register
         </span>

@@ -17,8 +17,15 @@ import {
 } from "@components/ui/field";
 import { Input } from "@components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@components/ui/native-select";
-import { createRegisterValidator } from "@DeparkHackaton/validators";
+import {
+  createRegisterValidator,
+  type RegisterInput,
+} from "@DeparkHackaton/validators";
 import PasswordInput from "@components/password-input";
+import { useMutation } from "@tanstack/react-query";
+import API from "@/lib/axios-wrapper";
+import { toast } from "sonner";
+import { cn } from "cn";
 
 const registerValidator = createRegisterValidator();
 
@@ -27,6 +34,24 @@ type FieldErrors = Partial<Record<string, string>>;
 export default function RegisterCard() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const navigate = useNavigate();
+
+  const mutation = useMutation({
+    mutationFn: async (input: RegisterInput) => {
+      const response = await API.post("/auth/register", input);
+      return response.data;
+    },
+    onSuccess: () => {
+      navigate("/login");
+      toast.success("Registration successful!", {
+        position: "top-right",
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Registration failed!", {
+        position: "top-right",
+      });
+    },
+  });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,8 +78,10 @@ export default function RegisterCard() {
     }
 
     setErrors({});
-    // TODO: send result.data to the register endpoint
+    mutation.mutate(result.data);
   }
+
+  const { isPending } = mutation;
 
   return (
     <Card className="w-full max-w-md">
@@ -127,8 +154,17 @@ export default function RegisterCard() {
           </Button>
         </CardFooter>
         <span
-          className="text-left cursor-pointer align-middle block w-full h-fit px-2 py-1"
-          onMouseUp={() => navigate("/login")}
+          className={cn(
+            "text-left cursor-pointer align-middle block w-full h-fit px-2 py-1",
+            {
+              "opacity-50 pointer-events-none": isPending,
+            },
+          )}
+          onMouseUp={() => {
+            if (!isPending) {
+              navigate("/login");
+            }
+          }}
         >
           Already have an account? Log in
         </span>
