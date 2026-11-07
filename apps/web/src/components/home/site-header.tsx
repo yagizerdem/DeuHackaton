@@ -1,10 +1,15 @@
-import { Microscope, Sprout } from "lucide-react";
+import { LogOut, Microscope, Sprout } from "lucide-react";
 import { Button } from "@components/ui/button";
 import ThemeToggle from "@components/theme-toggle";
 import { Fragment, useState } from "react";
 import AuthModal from "@components/auth/auth-modal";
 import LoginCard from "@components/auth/login-card";
 import RegisterCard from "@components/auth/register-card";
+import { useAuth } from "@/providers/auth-provider";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import API from "@/lib/axios-wrapper";
+import { getApiErrorMessage } from "@/lib/api-error";
 
 const NAV_LINKS = [
   { href: "#how-it-works", label: "How It Works" },
@@ -14,6 +19,20 @@ const NAV_LINKS = [
 
 export default function SiteHeader() {
   const [modal, setModal] = useState<"login" | "register" | null>(null);
+  const { user, setUser } = useAuth();
+
+  const logoutMutation = useMutation({
+    mutationFn: () => API.post("/auth/logout"),
+    onSuccess: () => {
+      setUser(null);
+      toast.success("Logged out successfully", { position: "top-right" });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Logout failed."), {
+        position: "top-right",
+      });
+    },
+  });
 
   return (
     <Fragment>
@@ -39,20 +58,37 @@ export default function SiteHeader() {
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <Button
-            variant="outline"
-            onClick={() => setModal("login")}
-            className="hidden cursor-pointer font-stitch-body sm:inline-flex"
-          >
-            Log In
-          </Button>
-          <Button
-            onClick={() => setModal("register")}
-            className="cursor-pointer font-stitch-body"
-          >
-            <Microscope />
-            Sign Up
-          </Button>
+          {!user && (
+            <Fragment>
+              <Button
+                variant="outline"
+                onClick={() => setModal("login")}
+                className="hidden cursor-pointer font-stitch-body sm:inline-flex"
+              >
+                Log In
+              </Button>
+              <Button
+                onClick={() => setModal("register")}
+                className="cursor-pointer font-stitch-body"
+              >
+                <Microscope />
+                Sign Up
+              </Button>
+            </Fragment>
+          )}
+          {user && (
+            <Fragment>
+              <Button
+                variant="outline"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="cursor-pointer font-stitch-body"
+              >
+                <LogOut />
+                Log Out
+              </Button>
+            </Fragment>
+          )}
         </div>
       </header>
       {modal && (
