@@ -1,7 +1,12 @@
 import { Request, Response } from "express";
 import { ApiResponse, HttpStatusCode } from "@DeparkHackaton/shared";
 import { AppError } from "@utils/app-error.js";
-import { analyzePlantImage, queryRag } from "@services/plant-analysis-service.js";
+import {
+  analyzePlantImage,
+  assessPlantRisk,
+  buildRetrievalQuery,
+  queryRag,
+} from "@services/plant-analysis-service.js";
 
 // Formats Gemini accepts for image input.
 export const ALLOWED_IMAGE_TYPES = [
@@ -19,12 +24,41 @@ export async function analyzeImage(req: Request, res: Response) {
 
   const analysis = await analyzePlantImage(req.file.buffer, req.file.mimetype);
 
-  const references =
-    analysis.isPlant && analysis.retrievalQuery.trim()
-      ? await queryRag(analysis.retrievalQuery)
-      : [];
+  const assessment = await assessPlantRisk(analysis);
 
   return res
     .status(HttpStatusCode.OK)
-    .json(ApiResponse.ok({ analysis, references }, "Image analyzed"));
+    .json(ApiResponse.ok({ analysis, assessment }, "Image analyzed"));
+}
+
+// Same as analyzeImage, but the risk assessment is grounded in knowledge base pages.
+export async function analyzeImageWithRag(req: Request, res: Response) {
+  if (!req.file) {
+    throw AppError.badRequest('Image is required in the "image" field');
+  }
+
+  const analysis = await analyzePlantImage(req.file.buffer, req.file.mimetype);
+
+  // nothing to look up when the image is not a plant
+  const sources = analysis.isPlant
+    ? await queryRag(buildRetrievalQuery(analysis))
+    : [];
+
+  const assessment = await assessPlantRisk(analysis, sources);
+
+  return res.status(HttpStatusCode.OK).json(
+    ApiResponse.ok(
+      {
+        analysis,
+        assessment,
+        sources: sources.map(({ source, page, score, summary }) => ({
+          source,
+          page,
+          score,
+          summary,
+        })),
+      },
+      "Image analyzed",
+    ),
+  );
 }

@@ -43,7 +43,26 @@ export const planAnalysisRouter = Router();
  *               httpStatusCode: 200
  *               message: OK
  *               data:
- *                 text: "..."
+ *                 analysis:
+ *                   isPlant: true
+ *                   species:
+ *                     commonName: Doğu çınarı
+ *                     latinName: Platanus orientalis
+ *                     family: Platanaceae
+ *                     confidence: 0.94
+ *                   symptoms:
+ *                     - Yapraklarda sarı benekler ve bronzlaşma
+ *                   suspectedPestsAndDiseases:
+ *                     - latinName: Corythucha ciliata
+ *                       commonName: Çınar ağı böceği
+ *                       type: insect
+ *                       reason: Yaprak alt yüzeyinde benekli kloroz
+ *                   invasiveThreats:
+ *                     - latinName: Anoplophora chinensis
+ *                       commonName: Turunçgil uzun antenli böceği
+ *                   protectiveMeasures:
+ *                     - Gövde tabanında 10-15 mm çıkış deliklerini kontrol edin
+ *                   summary: Yapraklarda çınar ağı böceği belirtileri var, gövde tabanını kontrol edin.
  *       "401":
  *         description: Missing, invalid or expired access token
  *         content:
