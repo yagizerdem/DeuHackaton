@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     element: <PlantProtectionAssistant />,
   },
   {
-    path: "/map",
+    path: "/2dmap",
     element: <MapPage />,
   },
 ]);
