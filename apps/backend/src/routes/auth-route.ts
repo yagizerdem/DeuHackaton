@@ -20,6 +20,12 @@ export const authRouter = Router();
  *         application/json:
  *           schema:
  *             $ref: "#/components/schemas/RegisterInput"
+ *           example:
+ *             email: yagiz@example.com
+ *             password: StrongPass123
+ *             userName: yagiz
+ *             gender: male
+ *             age: 25
  *     responses:
  *       "201":
  *         description: User registered
@@ -27,12 +33,21 @@ export const authRouter = Router();
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 201
+ *               message: User registered
  *       "400":
  *         description: Validation failed
  *         content:
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 400
+ *               message: Validation failed
+ *               formErrors:
+ *                 password:
+ *                   - "Too small: expected string to have >=8 characters"
  *       "409":
  *         description: Email already exists
  *         content:

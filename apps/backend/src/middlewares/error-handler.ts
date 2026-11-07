@@ -9,6 +9,8 @@ export function errorHandler(
   res: Response,
   next: NextFunction,
 ) {
+  console.error(err);
+
   if (err instanceof AppError && err.isOperational) {
     return res.status(err.httpStatusCode).json(
       ApiResponse.from({

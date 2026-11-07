@@ -13,6 +13,7 @@
   "dependencies": {
     "@DeparkHackaton/shared": "^1.0.0",
     "@DeparkHackaton/validators": "^1.0.0",
+    "bcrypt": "^6.0.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "mongoose": "^9.12.0",
@@ -21,6 +22,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.14",
