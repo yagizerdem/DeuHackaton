@@ -5,9 +5,9 @@ import ThemeToggle from "@components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "#nasil-calisir", label: "Nasıl Çalışır" },
-  { href: "#ozellikler", label: "Özellikler" },
-  { href: "#kaynaklar", label: "Kaynaklar" },
+  { href: "#how-it-works", label: "How It Works" },
+  { href: "#features", label: "Features" },
+  { href: "#resources", label: "Resources" },
 ];
 
 export default function SiteHeader() {
@@ -17,7 +17,7 @@ export default function SiteHeader() {
         <a href="#" className="group flex items-center gap-2">
           <Sprout className="size-6 fill-primary/20 text-primary transition-transform group-hover:scale-105" />
           <span className="font-stitch-headline text-stitch-headline-md font-medium tracking-tight text-primary">
-            Bitki Koruma Asistanı
+            Plant Protection Assistant
           </span>
         </a>
         <nav className="ml-6 hidden items-center gap-6 md:flex">
@@ -41,14 +41,14 @@ export default function SiteHeader() {
             "hidden font-stitch-body sm:inline-flex",
           )}
         >
-          Giriş Yap
+          Log In
         </Link>
         <Link
           to="/register"
           className={cn(buttonVariants(), "font-stitch-body")}
         >
           <Microscope />
-          Kayıt Ol
+          Sign Up
         </Link>
       </div>
     </header>

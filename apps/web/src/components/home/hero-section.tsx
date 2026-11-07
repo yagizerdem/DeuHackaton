@@ -8,20 +8,20 @@ export default function HeroSection() {
         <div className="inline-flex items-center gap-2 rounded-full border border-stitch-secondary/20 bg-stitch-secondary-container px-3.5 py-1.5">
           <span className="size-2 animate-pulse rounded-full bg-stitch-secondary" />
           <span className="font-stitch-label text-stitch-label-md font-semibold text-stitch-on-secondary-container">
-            🌱 RAG Destekli Bilimsel Bitki Patolojisi Asistanı
+            🌱 RAG-Powered Scientific Plant Pathology Assistant
           </span>
         </div>
       </div>
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-5">
           <h1 className="font-stitch-headline text-stitch-headline-xl-mobile font-medium tracking-tight text-primary md:text-stitch-headline-xl">
-            Ağaçlarınızı ve Bitkilerinizi İstilacı Türlerden Bilimsel
-            Kaynaklarla Koruyun
+            Protect Your Trees and Plants from Invasive Species with
+            Scientific Sources
           </h1>
           <p className="font-stitch-body text-stitch-body-lg text-muted-foreground">
-            Türkiye ve Akdeniz ekosistemine özel, hakemli akademik
-            araştırmalar ve tarımsal veri tabanlarıyla doğrulanmış yapay zekâ
-            rehberliği.
+            AI guidance tailored to the Turkish and Mediterranean ecosystem,
+            verified against peer-reviewed academic research and agricultural
+            databases.
           </p>
           <QueryPanel />
         </div>

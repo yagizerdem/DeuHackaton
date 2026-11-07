@@ -17,52 +17,53 @@ interface Feature {
 const FEATURES: Feature[] = [
   {
     icon: BookOpenText,
-    title: "Kaynak Gösteren Yanıtlar",
+    title: "Cited Answers",
     description:
-      "Her öneri doğrulanabilir bilimsel yayınlara, EPPO verilerine ve tarımsal kaynaklara doğrudan atıfta bulunur. Yanıltıcı veya uydurma (hallucination) tavsiyelere sıfır tolerans tanınır.",
-    highlight: "DOI ve Resmi Veri Tabanı Bağlantıları",
+      "Every recommendation directly cites verifiable scientific publications, EPPO data and agricultural sources. Zero tolerance for misleading or fabricated (hallucinated) advice.",
+    highlight: "DOI and Official Database Links",
   },
   {
     icon: Navigation,
-    title: "Konuma Özel Öneriler",
+    title: "Location-Specific Recommendations",
     description:
-      "İlçe ve mikroklima bazlı verilerle bölgenizdeki aktif istilacı tür baskısını ve karantina bölgelerini hesaplar. Doğu Karadeniz ile Ege kıyısındaki koruma stratejilerini birbirinden net olarak ayırır.",
-    highlight: "Bölgesel İklim ve Karantina Haritası",
+      "Uses district-level and microclimate data to calculate active invasive species pressure and quarantine zones in your area. Clearly separates protection strategies for the Eastern Black Sea from those for the Aegean coast.",
+    highlight: "Regional Climate and Quarantine Map",
   },
   {
     icon: Database,
-    title: "Güncel İstilacı Tür Bilgi Tabanı",
+    title: "Up-to-Date Invasive Species Knowledge Base",
     description:
-      "Yeni tespit edilen istilacı böcek, mantar ve yabancı ot kayıtları anlık olarak vektör veri tabanına işlenir. Sınır aşan zararlı hareketleri ve alarm seviyeleri haftalık güncellenir.",
-    highlight: "Haftalık Senkronize Vektör Havuzu",
+      "Newly detected invasive insect, fungus and weed records are added to the vector database in real time. Cross-border pest movements and alert levels are updated weekly.",
+    highlight: "Weekly Synchronized Vector Pool",
   },
   {
     icon: Leaf,
-    title: "Pratik Koruma Adımları",
+    title: "Practical Protection Steps",
     description:
-      "Kimyasal yükü en aza indiren biyolojik kontrol, tuzaklama ve kültürel bakım yönergeleri sağlar. Bahçeniz ve kentsel yeşil doku için doğa dostu Entegre Zararlı Yönetimi (IPM) sunar.",
-    highlight: "Sürdürülebilir IPM Metodolojisi",
+      "Provides biological control, trapping and cultural care guidelines that minimize chemical load. Offers nature-friendly Integrated Pest Management (IPM) for your garden and urban green spaces.",
+    highlight: "Sustainable IPM Methodology",
   },
 ];
 
 export default function FeaturesSection() {
   return (
     <section
-      id="ozellikler"
+      id="features"
       className="mx-auto max-w-[1440px] px-5 py-20 md:px-12"
     >
       <div className="mb-12 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <span className="font-stitch-label text-stitch-label-md font-semibold uppercase tracking-wider text-stitch-secondary">
-            Yetkinlikler
+            Capabilities
           </span>
           <h2 className="mt-2 font-stitch-headline text-stitch-headline-lg-mobile text-primary md:text-stitch-headline-lg">
-            Bilimsel Standartlarda Bitki Sağlığı
+            Plant Health at Scientific Standards
           </h2>
         </div>
         <p className="max-w-md font-stitch-body text-stitch-body-md text-muted-foreground">
-          Geleneksel arama motorlarının ötesinde, her çıktıyı kanıtlanabilir
-          bilimsel yayın temeline bağlayan yeni nesil analiz mimarisi.
+          Beyond traditional search engines, a next-generation analysis
+          architecture that ties every output to a provable scientific
+          publication base.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

@@ -15,21 +15,21 @@ import CitationBadge from "@components/home/citation-badge";
 const REFERENCES = [
   {
     id: "ref-1",
-    title: "EPPO Küresel Veri Tabanı (2023) —",
-    quote: "“Anoplophora chinensis Karantina Raporu”",
-    meta: "EPPO Data Sheets on Quarantine Pests • Kod: ANOLCN",
+    title: "EPPO Global Database (2023) —",
+    quote: "“Anoplophora chinensis Quarantine Report”",
+    meta: "EPPO Data Sheets on Quarantine Pests • Code: ANOLCN",
   },
   {
     id: "ref-2",
-    title: "Orman Genel Müdürlüğü & TÜBİTAK (2022) —",
-    quote: "“Marmara Bölgesi Kent Ormanı Zararlıları”",
-    meta: "Proje No: 118O429 • ISBN: 978-605-7599-12-8",
+    title: "General Directorate of Forestry & TÜBİTAK (2022) —",
+    quote: "“Pests of Urban Forests in the Marmara Region”",
+    meta: "Project No: 118O429 • ISBN: 978-605-7599-12-8",
   },
   {
     id: "ref-3",
-    title: "Bitki Koruma Bülteni, Cilt 61 —",
-    quote: "“Platanus Türlerinde Biyolojik Mücadele Esasları”",
-    meta: "DOI: 10.16955/bitkorb.892110 • Hakemli Yayın",
+    title: "Plant Protection Bulletin, Vol. 61 —",
+    quote: "“Principles of Biological Control in Platanus Species”",
+    meta: "DOI: 10.16955/bitkorb.892110 • Peer-Reviewed Publication",
   },
 ];
 
@@ -43,39 +43,38 @@ export default function AnswerPreview() {
           </div>
           <div>
             <h3 className="font-stitch-body text-stitch-title-lg text-primary">
-              Bitki Koruma Asistanı Yanıtı
+              Plant Protection Assistant Response
             </h3>
             <p className="font-stitch-label text-stitch-label-sm text-stitch-outline">
-              Sentezlenen Vektör Analizi • Az önce güncellendi
+              Synthesized Vector Analysis • Updated just now
             </p>
           </div>
         </div>
         <span className="inline-flex items-center gap-1 rounded border border-stitch-secondary/20 bg-stitch-secondary-container px-2.5 py-1 font-stitch-label text-stitch-label-md font-semibold text-stitch-on-secondary-container">
           <BadgeCheck className="size-4" />
-          Doğrulanmış Literatür
+          Verified Literature
         </span>
       </div>
 
       <div className="mt-4 inline-flex items-center gap-2 rounded-md border border-border/30 bg-stitch-surface-container-low px-3 py-1.5">
         <TreeDeciduous className="size-4 text-primary" />
         <span className="font-stitch-headline text-stitch-body-md font-medium italic text-primary">
-          Platanus orientalis (Doğu Çınarı)
+          Platanus orientalis (Oriental Plane)
         </span>
         <span className="text-stitch-outline">•</span>
         <span className="font-stitch-label text-stitch-label-sm font-semibold text-muted-foreground">
-          İstanbul / Marmara Havzası
+          Istanbul / Marmara Basin
         </span>
       </div>
 
       <p className="mt-4 pt-2 font-stitch-body text-stitch-body-lg leading-relaxed text-foreground">
-        İstanbul şartlarında Doğu Çınarı (<em>Platanus orientalis</em>) için en
-        kritik biyolojik tehdit <strong>Anoplophora chinensis</strong>{" "}
-        (Turunçgil Uzunantenli Böceği)
-        <CitationBadge index={1} href="#ref-1" /> ve{" "}
-        <strong>Corythucha ciliata</strong> (Çınar Dantel Böceği)
-        <CitationBadge index={2} href="#ref-2" /> türleridir. Erken dönemde
-        gövdede talaş çıkışı ve yaprak sararmaları düzenli taranmalı, feromon
-        tuzakları ve biyolojik mücadele protokolleri uygulanmalıdır
+        In Istanbul conditions, the most critical biological threats to the
+        Oriental Plane (<em>Platanus orientalis</em>) are{" "}
+        <strong>Anoplophora chinensis</strong> (Citrus Longhorned Beetle)
+        <CitationBadge index={1} href="#ref-1" /> and{" "}
+        <strong>Corythucha ciliata</strong> (Sycamore Lace Bug)
+        <CitationBadge index={2} href="#ref-2" />. In the early stage, check the trunk regularly for sawdust and leaf
+        yellowing, and apply pheromone traps and biological control protocols
         <CitationBadge index={3} href="#ref-3" />.
       </p>
 
@@ -83,13 +82,12 @@ export default function AnswerPreview() {
         <TriangleAlert className="mt-0.5 size-5 shrink-0 text-stitch-on-tertiary-container" />
         <div>
           <h4 className="font-stitch-body text-stitch-title-md text-primary">
-            Karantina Uyarısı (EPPO A2 Listesi)
+            Quarantine Alert (EPPO A2 List)
           </h4>
           <p className="mt-0.5 font-stitch-body text-stitch-body-sm text-muted-foreground">
-            <em>Anoplophora chinensis</em> tespit edilmesi halinde derhal yerel
-            bitki sağlığı müdürlüğüne bildirim yapılması yasal zorunluluktur.
-            Gövde dip kısımlarında 10-15 mm çapında çıkış delikleri
-            taranmalıdır.
+            <em>Anoplophora chinensis</em> is detected, reporting it to the local
+            plant health directorate immediately is a legal requirement. Check
+            the base of the trunk for exit holes 10-15 mm in diameter.
           </p>
         </div>
       </div>
@@ -97,7 +95,7 @@ export default function AnswerPreview() {
       <div className="mt-6 border-t border-border/50 pt-5">
         <h4 className="mb-3 flex items-center gap-1.5 font-stitch-label text-stitch-label-md font-semibold uppercase tracking-wider text-muted-foreground">
           <BookOpen className="size-4 text-stitch-secondary" />
-          Doğrulanmış Akademik ve İdari Kaynakça
+          Verified Academic and Administrative References
         </h4>
         <div className="flex flex-col gap-2.5">
           {REFERENCES.map((ref, i) => (
@@ -121,7 +119,7 @@ export default function AnswerPreview() {
                 </div>
               </div>
               <span className="flex shrink-0 items-center gap-1 font-stitch-label text-stitch-label-sm text-stitch-secondary transition-colors hover:text-primary">
-                İncele
+                View
                 <ExternalLink className="size-3" />
               </span>
             </div>
@@ -133,20 +131,20 @@ export default function AnswerPreview() {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 font-stitch-label text-stitch-label-sm text-muted-foreground">
             <span className="size-2 rounded-full bg-stitch-secondary" />
-            Güvenilirlik Skoru:{" "}
+            Reliability Score:{" "}
             <strong className="font-bold text-primary">%98.4</strong>
           </span>
           <span className="flex items-center gap-1.5 font-stitch-label text-stitch-label-sm text-muted-foreground">
             <Database className="size-3 text-stitch-secondary" />
-            RAG Vektör Veritabanı:{" "}
-            <strong className="font-bold text-primary">Güncel</strong>
+            RAG Vector Database:{" "}
+            <strong className="font-bold text-primary">Up to date</strong>
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" title="Raporu Kopyala">
+          <Button variant="ghost" size="icon-sm" title="Copy Report">
             <Copy />
           </Button>
-          <Button variant="ghost" size="icon-sm" title="PDF Olarak Aktar">
+          <Button variant="ghost" size="icon-sm" title="Export as PDF">
             <Download />
           </Button>
         </div>

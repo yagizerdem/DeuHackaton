@@ -17,58 +17,58 @@ interface Step {
 const STEPS: Step[] = [
   {
     icon: Brain,
-    title: "Bitki Türünü Öğrenir",
+    title: "Identifies the Plant Species",
     description:
-      "Türün Latince taksonomisini ve morfolojik özelliklerini belirler.",
-    tag: "Girdi Çözümleme",
+      "Determines the species' Latin taxonomy and morphological traits.",
+    tag: "Input Parsing",
   },
   {
     icon: MapPinned,
-    title: "Konumu Değerlendirir",
+    title: "Assesses the Location",
     description:
-      "Bölgesel iklim, mikroklima ve yerel istilacı göç haritalarını inceler.",
-    tag: "Coğrafi Vektörler",
+      "Examines regional climate, microclimate and local invasive-species migration maps.",
+    tag: "Geographic Vectors",
   },
   {
     icon: Bug,
-    title: "İstilacı Türleri Bilgi Tabanından Getirir",
+    title: "Retrieves Invasive Species from the Knowledge Base",
     description:
-      "EPPO, Tarım Bakanlığı ve akademik veri tabanlarından güncel zararlıları çeker.",
-    tag: "Semantik Arama",
+      "Pulls current pests from EPPO, the Ministry of Agriculture and academic databases.",
+    tag: "Semantic Search",
   },
   {
     icon: ShieldCheck,
-    title: "Koruyucu Önlemleri Araştırır",
+    title: "Researches Protective Measures",
     description:
-      "Çevre dostu, biyolojik ve entegre zararlı yönetimi (IPM) metotlarını tarar.",
-    tag: "Protokol Filtreleme",
+      "Scans eco-friendly, biological and Integrated Pest Management (IPM) methods.",
+    tag: "Protocol Filtering",
   },
   {
     icon: Library,
-    title: "Kaynak Göstererek Yanıtlar",
+    title: "Answers with Citations",
     description:
-      "Hakemli makaleler ve resmi kılavuzlarla atıf yaparak güvenilir rapor sunar.",
-    tag: "Kaynak Doğrulaması",
+      "Delivers a reliable report citing peer-reviewed articles and official guidelines.",
+    tag: "Source Verification",
   },
 ];
 
 export default function HowItWorksSection() {
   return (
     <section
-      id="nasil-calisir"
+      id="how-it-works"
       className="w-full border-y border-border/30 bg-stitch-surface-container-low/70 py-20"
     >
       <div className="mx-auto max-w-[1440px] px-5 md:px-12">
         <div className="mx-auto mb-14 max-w-2xl text-center">
           <span className="font-stitch-label text-stitch-label-md font-semibold uppercase tracking-wider text-stitch-secondary">
-            Metodoloji & Algoritma
+            Methodology & Algorithm
           </span>
           <h2 className="mt-2 font-stitch-headline text-stitch-headline-lg-mobile text-primary md:text-stitch-headline-lg">
-            Nasıl Çalışır?
+            How It Works
           </h2>
           <p className="mt-3 font-stitch-body text-stitch-body-lg text-muted-foreground">
-            Sorunuzdan doğrulanmış akademik yanıta 5 adımlı bilimsel RAG
-            süreci.
+            A 5-step scientific RAG process from your question to a verified
+            academic answer.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">

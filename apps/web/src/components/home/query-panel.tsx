@@ -3,9 +3,9 @@ import { Button } from "@components/ui/button";
 import { Textarea } from "@components/ui/textarea";
 
 const EXAMPLE_QUESTIONS = [
-  "Zeytin ağacı dal kanseri",
-  "Ankara karaçam çam kese böceği",
-  "Turunçgil unlu biti",
+  "Olive tree branch canker",
+  "Ankara black pine processionary moth",
+  "Citrus mealybug",
 ];
 
 export default function QueryPanel() {
@@ -15,7 +15,7 @@ export default function QueryPanel() {
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="size-4 text-stitch-secondary" />
           <span className="font-stitch-label text-stitch-label-sm">
-            İstanbul, Türkiye
+            Istanbul, Türkiye
           </span>
         </div>
         <div className="flex items-center gap-1.5 rounded-full border border-border/40 bg-stitch-surface-container-low px-2.5 py-0.5">
@@ -28,26 +28,26 @@ export default function QueryPanel() {
       <Textarea
         rows={3}
         className="resize-none font-stitch-body text-stitch-body-md"
-        placeholder="Ağacınızın veya bitkinizin durumunu yazın..."
-        defaultValue="İstanbul'da çınar ağacım var. Hangi istilacı türlere karşı önlem almalıyım?"
+        placeholder="Describe the condition of your tree or plant..."
+        defaultValue="I have a plane tree in Istanbul. Which invasive species should I take precautions against?"
       />
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" title="Numune Görseli Ekle">
+          <Button variant="ghost" size="icon" title="Add Sample Photo">
             <ImagePlus />
           </Button>
-          <Button variant="ghost" size="icon" title="Konum Değiştir">
+          <Button variant="ghost" size="icon" title="Change Location">
             <LocateFixed />
           </Button>
         </div>
         <Button size="lg" className="font-stitch-body">
-          Sor
+          Ask
           <ArrowRight />
         </Button>
       </div>
       <div className="border-t border-border/50 pt-3">
         <p className="mb-2 font-stitch-label text-stitch-label-sm text-stitch-outline">
-          Örnek sorular:
+          Example questions:
         </p>
         <div className="flex flex-wrap gap-1.5">
           {EXAMPLE_QUESTIONS.map((q) => (
