@@ -19,6 +19,7 @@ import {
 import { Input } from "@components/ui/input";
 import PasswordInput from "@components/password-input";
 import ParticleLayout from "@layouts/particle-layout";
+import { useNavigate } from "react-router";
 
 const loginValidator = createLoginValidator();
 
@@ -26,6 +27,7 @@ type FieldErrors = Partial<Record<string, string>>;
 
 export default function LoginPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
+  const navigate = useNavigate();
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -92,6 +94,12 @@ export default function LoginPage() {
                   Log in
                 </Button>
               </CardFooter>
+              <span
+                className="text-left cursor-pointer align-middle block w-full h-fit px-2 py-1"
+                onMouseUp={() => navigate("/register")}
+              >
+                Don't have an account? Register
+              </span>
             </form>
           </Card>
         </div>

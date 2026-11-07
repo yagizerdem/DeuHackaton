@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { createRegisterValidator } from "@DeparkHackaton/validators";
 import DefaultLayout from "@layouts/default-layout";
 import { Button } from "@components/ui/button";
@@ -27,6 +28,7 @@ type FieldErrors = Partial<Record<string, string>>;
 
 export default function RegisterPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
+  const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -135,6 +137,12 @@ export default function RegisterPage() {
                   Register
                 </Button>
               </CardFooter>
+              <span
+                className="text-left cursor-pointer align-middle block w-full h-fit px-2 py-1"
+                onMouseUp={() => navigate("/login")}
+              >
+                Already have an account? Log in
+              </span>
             </form>
           </Card>
         </div>
