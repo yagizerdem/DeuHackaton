@@ -9,7 +9,7 @@
     "dev": "cross-env NODE_ENV=development nodemon --watch src --ext ts,json --exec tsx src/server.ts"
   },
   "dependencies": {
-    "@depark/shared": "*",
+    "@DeparkHackaton/shared": "^1.0.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "mongoose": "^9.12.0"
