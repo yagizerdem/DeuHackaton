@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { analyzeImage } from "@controllers/plan-analysis-controller.js";
+import {
+  analyzeImage,
+  analyzeImageWithRag,
+} from "@controllers/plan-analysis-controller.js";
 import asyncWrapper from "@/utils/async-wrapper.js";
 import { authenticate } from "@/middlewares/authenticate.js";
 import { uploadImage } from "@/middlewares/upload-image.js";
@@ -91,4 +94,57 @@ planAnalysisRouter.post(
   authenticate,
   uploadImage,
   asyncWrapper(analyzeImage),
+);
+
+/**
+ * @openapi
+ * /api/plan-analysis/rag:
+ *   post:
+ *     tags:
+ *       - Plan Analysis
+ *     summary: Analyze a plant image with the knowledge base
+ *     description: >-
+ *       Same input as `/api/plan-analysis`, but the risk assessment is grounded
+ *       in pages retrieved from the RAG knowledge base. The response also lists
+ *       the `sources` (file, page, score) that were used.
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       "200":
+ *         description: Analysis, grounded assessment and the sources used
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *       "401":
+ *         description: Missing, invalid or expired access token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *       "503":
+ *         description: The knowledge base or Gemini is unavailable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ */
+planAnalysisRouter.post(
+  "/rag",
+  authenticate,
+  uploadImage,
+  asyncWrapper(analyzeImageWithRag),
 );
