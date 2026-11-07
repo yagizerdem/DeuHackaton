@@ -7,8 +7,23 @@ import {
 } from "@/services/user-service.js";
 import bcrypt from "bcrypt";
 import { User } from "@/models/user-entity.js";
-import { issueTokenPair } from "@/services/token-service.js";
+import {
+  issueTokenPair,
+  rotateRefreshToken,
+  type TokenPair,
+} from "@/services/token-service.js";
 import { AppError } from "@/utils/app-error.js";
+
+function setAuthCookies(res: Response, tokens: TokenPair) {
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  } as const;
+
+  res.cookie("refreshToken", tokens.refreshToken, options);
+  res.cookie("accessToken", tokens.accessToken, options);
+}
 
 export async function register(_req: Request, _res: Response) {
   const { email, password, userName, gender, age } = _req.body as RegisterInput;
@@ -57,17 +72,7 @@ export async function login(req: Request, res: Response) {
     user._id.toString(),
   );
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-
-  res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  setAuthCookies(res, { accessToken, refreshToken });
 
   return res.status(HttpStatusCode.OK).json(
     ApiResponse.ok(
@@ -93,4 +98,24 @@ export async function logout(_req: Request, _res: Response) {
   return _res
     .status(HttpStatusCode.OK)
     .json(ApiResponse.ok(null, "Logged out successfully"));
+}
+
+export async function refresh(req: Request, res: Response) {
+  const token: unknown = req.cookies?.refreshToken ?? req.body?.refreshToken;
+  if (typeof token !== "string" || !token) {
+    throw AppError.unauthorized("Refresh token is missing");
+  }
+
+  const { userId, accessToken, refreshToken } = await rotateRefreshToken(token);
+
+  // the account may have been deleted since the token was issued
+  if (!(await User.exists({ _id: userId }))) {
+    throw AppError.unauthorized("User no longer exists");
+  }
+
+  setAuthCookies(res, { accessToken, refreshToken });
+
+  return res
+    .status(HttpStatusCode.OK)
+    .json(ApiResponse.ok({ accessToken, refreshToken }, "Tokens refreshed"));
 }

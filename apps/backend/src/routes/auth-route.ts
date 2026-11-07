@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, logout, register } from "@controllers/auth-controller.js";
+import { login, logout, refresh, register } from "@controllers/auth-controller.js";
 import asyncWrapper from "@/utils/async-wrapper.js";
 import { validator } from "@/middlewares/validator.js";
 import {
@@ -158,3 +158,54 @@ authRouter.post(
  *               message: Logged out successfully
  */
 authRouter.post("/logout", asyncWrapper(logout));
+
+/**
+ * @openapi
+ * /api/auth/refresh:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Rotate the refresh token and get a new access token
+ *     description: >-
+ *       Reads the refresh token from the `refreshToken` cookie (or from the
+ *       `refreshToken` field of the body). The presented token is revoked and
+ *       a new access and refresh token are issued and set as cookies. Reusing a
+ *       token that was already rotated revokes the whole token family.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       "200":
+ *         description: Tokens refreshed
+ *         headers:
+ *           Set-Cookie:
+ *             description: Sets the new accessToken and refreshToken cookies.
+ *             schema:
+ *               type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 200
+ *               message: Tokens refreshed
+ *               data:
+ *                 accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.access-token-payload.signature
+ *                 refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh-token-payload.signature
+ *       "401":
+ *         description: Refresh token is missing, invalid, expired or already used
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiResponse"
+ *             example:
+ *               httpStatusCode: 401
+ *               message: Refresh token has been revoked
+ */
+authRouter.post("/refresh", asyncWrapper(refresh));
