@@ -150,3 +150,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+.claude/worktree/*
+.claude/worktrees/*
+.claude/worktree/**/*
+.claude/worktrees/**/*

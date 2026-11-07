@@ -1,0 +1,52 @@
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: "1234"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mongodb_network
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - "mongodb://localhost:27017/admin"
+        - "--eval=db.runCommand({ping:1})"
+      retries: 3
+      timeout: 5s
+
+  # Mongo Express
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://user:1234@mongodb:27017
+      ME_CONFIG_BASICAUTH_USERNAME: user
+      ME_CONFIG_BASICAUTH_PASSWORD: "1234"
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+    depends_on:
+      - mongodb
+    networks:
+      - mongodb_network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  mongodb_network:
+    driver: bridge
+
+# credentials for mongo-express admin/pass
+# Username: user
+# Password: 1234

@@ -4,10 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
-    "start": "node dist/server.js"
+    "build": "tsc -b && tsc-alias -p tsconfig.json",
+    "start": "cross-env NODE_ENV=production node dist/src/server.js",
+    "start:local": "cross-env NODE_ENV=production node --env-file=.env.prod dist/src/server.js",
+    "dev": "cross-env NODE_ENV=development nodemon --watch src --ext ts,json --exec tsx src/server.ts",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@depark/shared": "*"
+    "@DeparkHackaton/shared": "^1.0.0",
+    "@DeparkHackaton/validators": "^1.0.0",
+    "bcrypt": "^6.0.0",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.4.2",
+    "mongoose": "^9.12.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "nodemon": "^3.1.14",
+    "tsc-alias": "^1.9.10",
+    "tsx": "^4.23.15"
   }
 }
