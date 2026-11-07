@@ -13,6 +13,7 @@ export default defineConfig({
       "@assets": path.resolve(import.meta.dirname, "./src/assets"),
       "@hooks": path.resolve(import.meta.dirname, "./src/hooks"),
       "@pages": path.resolve(import.meta.dirname, "./src/pages"),
+      "@providers": path.resolve(import.meta.dirname, "./src/providers"),
     },
   },
   server: {
