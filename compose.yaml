@@ -39,8 +39,8 @@ services:
     networks:
       - mongodb_network
 
-  # RAG (Flask). Put the PDFs in rag/data, then index them with:
-  #   docker compose run --rm rag python ingest.py
+  # RAG (Flask). Put the PDFs in rag/data. On every start the container indexes
+  # the pages that are not in the rag_chroma volume yet, then serves.
   rag:
     build: ./rag
     container_name: rag
@@ -60,7 +60,7 @@ services:
         - "-c"
         - "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"
       interval: 30s
-      start_period: 20s
+      start_period: 120s
       retries: 3
       timeout: 5s
 

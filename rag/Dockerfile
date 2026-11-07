@@ -24,4 +24,4 @@ USER app
 EXPOSE 5001
 
 # one worker: the embedding model is loaded per process; the first request loads it
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--timeout", "300", "app:app"]
+CMD ["python", "start.py", "gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--timeout", "300", "app:app"]
