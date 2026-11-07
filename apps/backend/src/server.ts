@@ -4,6 +4,8 @@ import { readDevEnv, readProdEnv } from "@/read-env.js";
 import { connectDB } from "@/db.js";
 import { errorHandler } from "@middlewares/error-handler.js";
 import { authRouter } from "@routes/auth-route.js";
+import swaggerUi from "swagger-ui-express";
+import { openApiSpec } from "@/docs/openapi.js";
 
 if (process.env.NODE_ENV === "development") {
   readDevEnv();
@@ -32,6 +34,11 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", db: mongoose.connection.readyState === 1 });
 });
+
+app.get("/api-docs.json", (_req, res) => {
+  res.json(openApiSpec);
+});
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 app.use("/api/auth", authRouter);
 
