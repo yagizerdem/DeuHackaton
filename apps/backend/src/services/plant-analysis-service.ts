@@ -106,3 +106,34 @@ export async function analyzePlantImage(
   }
   return parsed.data;
 }
+
+export type RagResult = {
+  source: string;
+  page: number;
+  score: number;
+  summary: string;
+  text: string;
+};
+
+// Searches the dockerized RAG service (rag/app.py) for plant protection pages.
+export async function queryRag(query: string, k = 5): Promise<RagResult[]> {
+  const ragUrl = process.env.RAG_URL ?? "http://localhost:5001";
+  let response: Response;
+  try {
+    response = await fetch(`${ragUrl}/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, k }),
+      signal: AbortSignal.timeout(120_000),
+    });
+  } catch {
+    throw AppError.serviceUnavailable("Knowledge base is unreachable");
+  }
+
+  if (!response.ok) {
+    throw AppError.serviceUnavailable("Knowledge base query failed");
+  }
+
+  const { results } = (await response.json()) as { results: RagResult[] };
+  return results;
+}

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ApiResponse, HttpStatusCode } from "@DeparkHackaton/shared";
 import { AppError } from "@utils/app-error.js";
-import { analyzePlantImage } from "@services/plant-analysis-service.js";
+import { analyzePlantImage, queryRag } from "@services/plant-analysis-service.js";
 
 // Formats Gemini accepts for image input.
 export const ALLOWED_IMAGE_TYPES = [
@@ -19,7 +19,12 @@ export async function analyzeImage(req: Request, res: Response) {
 
   const analysis = await analyzePlantImage(req.file.buffer, req.file.mimetype);
 
+  const references =
+    analysis.isPlant && analysis.retrievalQuery.trim()
+      ? await queryRag(analysis.retrievalQuery)
+      : [];
+
   return res
     .status(HttpStatusCode.OK)
-    .json(ApiResponse.ok(analysis, "Image analyzed"));
+    .json(ApiResponse.ok({ analysis, references }, "Image analyzed"));
 }
