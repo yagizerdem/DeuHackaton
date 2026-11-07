@@ -161,3 +161,11 @@ vite.config.ts.timestamp-*
 .venv/*
 config/__pycache__/
 config/__pycache__/*
+# Python
+__pycache__/
+*.pyc
+
+# RAG corpus (large PDFs) and local index
+rag/data/*
+!rag/data/.gitkeep
+rag/chroma/

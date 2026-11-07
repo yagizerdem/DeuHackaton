@@ -39,9 +39,36 @@ services:
     networks:
       - mongodb_network
 
+  # RAG (Flask). Put the PDFs in rag/data, then index them with:
+  #   docker compose run --rm rag python ingest.py
+  rag:
+    build: ./rag
+    container_name: rag
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./rag/.env
+    volumes:
+      - ./rag/data:/app/data:ro
+      - rag_chroma:/app/chroma
+      - rag_models:/app/.cache/huggingface
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - "-c"
+        - "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"
+      interval: 30s
+      start_period: 20s
+      retries: 3
+      timeout: 5s
+
 volumes:
   mongodb_data:
     driver: local
+  rag_chroma:
+  rag_models:
 
 networks:
   mongodb_network:
