@@ -21,10 +21,13 @@ import {
 } from "@components/ui/field";
 import { Input } from "@components/ui/input";
 import PasswordInput from "@components/password-input";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { useMutation } from "@tanstack/react-query";
 import API from "@/lib/axios-wrapper";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { type ApiResponse } from "@DeparkHackaton/shared";
+import { type LoginResponseDto } from "@DeparkHackaton/dto";
 
 const loginValidator = createLoginValidator();
 
@@ -36,17 +39,26 @@ export default function LoginCard() {
 
   const mutation = useMutation({
     mutationFn: async (credentials: LoginInput) => {
-      const response = await API.post("/auth/login", credentials);
+      const response = await API.post<ApiResponse<LoginResponseDto>>(
+        "/auth/login",
+        credentials,
+      );
       return response.data;
     },
     onSuccess: (data) => {
       console.log("Login successful:", data);
       navigate("/");
+      toast.success(data.message ?? "Login successful", {
+        position: "top-right",
+      });
     },
     onError: (error) => {
       console.error("Login failed:", error);
       toast.error(
-        error.message ?? "Login failed. Please check your credentials.",
+        getApiErrorMessage(
+          error,
+          "Login failed. Please check your credentials.",
+        ),
         {
           position: "top-right",
         },

@@ -16,6 +16,7 @@ import {
   FieldLabel,
 } from "@components/ui/field";
 import { Input } from "@components/ui/input";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { NativeSelect, NativeSelectOption } from "@components/ui/native-select";
 import {
   createRegisterValidator,
@@ -26,6 +27,8 @@ import { useMutation } from "@tanstack/react-query";
 import API from "@/lib/axios-wrapper";
 import { toast } from "sonner";
 import { cn } from "cn";
+import { type RefreshResponseDto } from "@DeparkHackaton/dto";
+import { type ApiResponse } from "@DeparkHackaton/shared";
 
 const registerValidator = createRegisterValidator();
 
@@ -37,17 +40,26 @@ export default function RegisterCard() {
 
   const mutation = useMutation({
     mutationFn: async (input: RegisterInput) => {
-      const response = await API.post("/auth/register", input);
+      const response = await API.post<ApiResponse<RefreshResponseDto>>(
+        "/auth/register",
+        input,
+      );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       navigate("/login");
       toast.success("Registration successful!", {
         position: "top-right",
       });
+      toast.success(
+        data.message ?? "You can now log in with your credentials!",
+        {
+          position: "top-right",
+        },
+      );
     },
     onError: (error) => {
-      toast.error(error.message ?? "Registration failed!", {
+      toast.error(getApiErrorMessage(error, "Registration failed!"), {
         position: "top-right",
       });
     },

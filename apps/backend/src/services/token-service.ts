@@ -99,3 +99,24 @@ export async function rotateRefreshToken(
   const pair = await issueTokenPair(payload.sub, payload.family);
   return { ...pair, userId: payload.sub };
 }
+
+export function verifyAccessToken(token: string): { userId: string } {
+  const { secret, issuer, audience } = jwtConfig();
+
+  let payload: jwt.JwtPayload;
+  try {
+    payload = jwt.verify(token, secret, { issuer, audience }) as jwt.JwtPayload;
+  } catch (error) {
+    throw AppError.unauthorized(
+      error instanceof jwt.TokenExpiredError
+        ? "Access token expired"
+        : "Invalid access token",
+    );
+  }
+
+  if (payload.type !== "access" || !payload.sub) {
+    throw AppError.unauthorized("Invalid access token");
+  }
+
+  return { userId: payload.sub };
+}

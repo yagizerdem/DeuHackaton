@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@DeparkHackaton/dto": "^1.0.0",
     "@DeparkHackaton/shared": "^1.0.0",
     "@DeparkHackaton/validators": "^1.0.0",
     "bcrypt": "^6.0.0",

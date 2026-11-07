@@ -14,6 +14,12 @@ import {
 } from "@/services/token-service.js";
 import { AppError } from "@/utils/app-error.js";
 import { ensureUserExistByEmail } from "@services/user-service.js";
+import {
+  TokenPairDto,
+  LoginResponseDto,
+  RegisterResponseDto,
+  RefreshResponseDto,
+} from "@DeparkHackaton/dto";
 
 function setAuthCookies(res: Response, tokens: TokenPair) {
   const options = {
@@ -44,14 +50,14 @@ export async function register(_req: Request, _res: Response) {
   });
 
   return _res.status(HttpStatusCode.CREATED).json(
-    ApiResponse.created(
+    ApiResponse.created<RegisterResponseDto>(
       {
         user: {
-          id: userFromDb._id,
+          id: userFromDb._id.toString(),
           email: userFromDb.email,
           userName: userFromDb.userName,
-          gender: userFromDb.gender,
-          age: userFromDb.age,
+          gender: userFromDb.gender ?? undefined,
+          age: userFromDb.age ?? undefined,
         },
       },
       "User registered successfully",
@@ -77,16 +83,16 @@ export async function login(req: Request, res: Response) {
   setAuthCookies(res, { accessToken, refreshToken });
 
   return res.status(HttpStatusCode.OK).json(
-    ApiResponse.ok(
+    ApiResponse.ok<LoginResponseDto>(
       {
         accessToken,
         refreshToken,
         user: {
-          id: user._id,
+          id: user._id.toString(),
           email: user.email,
           userName: user.userName,
-          gender: user.gender,
-          age: user.age,
+          gender: user.gender ?? undefined,
+          age: user.age ?? undefined,
         },
       },
       "Logged in successfully",
@@ -119,5 +125,10 @@ export async function refresh(req: Request, res: Response) {
 
   return res
     .status(HttpStatusCode.OK)
-    .json(ApiResponse.ok({ accessToken, refreshToken }, "Tokens refreshed"));
+    .json(
+      ApiResponse.ok<RefreshResponseDto>(
+        { accessToken, refreshToken },
+        "Tokens refreshed",
+      ),
+    );
 }
