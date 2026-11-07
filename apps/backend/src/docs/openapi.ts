@@ -1,3 +1,5 @@
+import path from "node:path";
+import swaggerJsdoc from "swagger-jsdoc";
 import { z } from "zod";
 import {
   createLoginValidator,
@@ -25,7 +27,7 @@ const jsonBody = (schemaName: string) => ({
   },
 });
 
-export const openApiSpec = {
+const definition = {
   openapi: "3.0.3",
   info: {
     title: "Depark Hackaton API",
@@ -55,18 +57,6 @@ export const openApiSpec = {
               },
             },
           },
-        },
-      },
-    },
-    "/api/auth/register": {
-      post: {
-        tags: ["Auth"],
-        summary: "Register a new user",
-        requestBody: jsonBody("RegisterInput"),
-        responses: {
-          "201": apiResponse("User registered"),
-          "400": apiResponse("Validation failed"),
-          "409": apiResponse("Email already exists"),
         },
       },
     },
@@ -112,3 +102,14 @@ export const openApiSpec = {
     },
   },
 };
+
+// Endpoints documented with @openapi JSDoc blocks live next to their routes.
+// The glob resolves to .ts under tsx and .js in the compiled output.
+const routesGlob = path
+  .resolve(import.meta.dirname, "../routes/*.{ts,js}")
+  .replaceAll("\\", "/");
+
+export const openApiSpec = swaggerJsdoc({
+  definition,
+  apis: [routesGlob],
+});
