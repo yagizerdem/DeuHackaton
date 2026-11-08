@@ -20,15 +20,15 @@ export default function ObservationDetail({
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="Close"
+          aria-label="Kapat"
           onClick={onClose}
         >
           <X />
         </Button>
       </div>
       <p className="text-muted-foreground">
-        Observed in {observation.year}, {observation.distanceKm} km from the
-        selected location.
+        {observation.year} yılında gözlendi, seçili konuma {observation.distanceKm} km
+        uzaklıkta.
       </p>
       <p className="font-stitch-label text-xs text-muted-foreground">
         {observation.lat.toFixed(4)}, {observation.lng.toFixed(4)}
@@ -39,7 +39,7 @@ export default function ObservationDetail({
         rel="noreferrer"
         className="text-xs text-primary hover:underline"
       >
-        Open on GBIF
+        GBIF'te aç
       </a>
     </div>
   );

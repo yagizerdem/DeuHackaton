@@ -8,7 +8,11 @@ export interface MapCenter {
   lng: number;
 }
 
-export function useInvasiveSpecies(center: MapCenter, radiusKm: number) {
+export function useInvasiveSpecies(
+  center: MapCenter,
+  radiusKm: number,
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["invasive-species", center.lat, center.lng, radiusKm],
     queryFn: async () => {
@@ -18,6 +22,7 @@ export function useInvasiveSpecies(center: MapCenter, radiusKm: number) {
       );
       return response.data.data!;
     },
+    enabled,
     // GBIF changes slowly and the backend caches for an hour
     staleTime: 10 * 60 * 1000,
     // keep the old observations on screen while a new area loads

@@ -4,7 +4,7 @@ import {
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
 } from "cesium";
-import { useViewer } from "@components/invasive-species/viewer-context";
+import { useViewer } from "@components/map3d/viewer-context";
 import type { MapCenter } from "@/lib/invasive-species-api";
 
 interface GlobePickerProps {

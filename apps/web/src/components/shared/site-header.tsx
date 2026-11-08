@@ -16,7 +16,7 @@ import { Link } from "react-router";
 const NAV_LINKS = [
   { to: "/plant-protection-assistant", label: "Analyze" },
   { to: "/2dmap", label: "2D Map" },
-  { to: "/invasive-species", label: "Invasive Species", requiresLogin: true },
+  { to: "/3dmap", label: "3D Map", requiresLogin: true },
   { to: "/plants", label: "My Garden", requiresLogin: true },
   { to: "/plants/overview", label: "Plant Overview", requiresLogin: true },
   { to: "/tasks/board", label: "Task Board", requiresLogin: true },

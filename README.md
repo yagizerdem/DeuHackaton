@@ -1,103 +1,123 @@
 # Plant Protection Assistant
 
-Bitki fotoğrafından tür tanıma, zararlı/hastalık değerlendirmesi ve bilgi tabanı (RAG) destekli koruma önerisi üreten web uygulaması. Yanında orman yangını tehlikesini gösteren 2B risk haritası bulunur.
+A web application that identifies plant species from a photo, assesses pests and diseases, and generates protection recommendations backed by a knowledge base (RAG). It also includes a 2D risk map showing forest fire danger.
 
-> Depark Hackaton projesi. Monorepo: React arayüzü, Express API'si ve Docker'da çalışan Flask tabanlı RAG servisi.
+> Depark Hackathon project. Monorepo: React frontend, Express API, and a Flask-based RAG service running in Docker.
 
-## İçindekiler
+## Contents
 
-- [Proje kapsamı](#proje-kapsamı)
-- [Mimari](#mimari)
-- [Teknolojiler](#teknolojiler)
-- [Repo yapısı](#repo-yapısı)
-- [Kurulum](#kurulum)
-- [Ortam değişkenleri](#ortam-değişkenleri)
-- [API uç noktaları](#api-uç-noktaları)
-- [RAG servisi](#rag-servisi)
-- [Maliyet](#maliyet)
-- [Geliştirme notları](#geliştirme-notları)
-- [Bilinen sınırlamalar](#bilinen-sınırlamalar)
-- [Lisans](#lisans)
+- [Project scope](#project-scope)
+- [Architecture](#architecture)
+- [Technologies](#technologies)
+- [Repository structure](#repository-structure)
+- [Setup](#setup)
+- [Environment variables](#environment-variables)
+- [API endpoints](#api-endpoints)
+- [RAG service](#rag-service)
+- [Cost](#cost)
+- [Development notes](#development-notes)
+- [Known limitations](#known-limitations)
+- [License](#license)
 
-## Proje kapsamı
+## Project scope
 
-**Problem:** Bitki sağlığı kararları (bir zararlıdan şüphelenmek, karantina listesindeki bir türü bildirmek, ne zaman müdahale etmek) dağınık kaynaklara dayanır: EPPO listeleri, bakanlık talimatları, akademik rehberler. Saha kullanıcısı için bunları hızlı ve izlenebilir şekilde bir araya getirmek zordur.
+**Problem:** Plant health decisions (suspecting a pest, reporting a species on a quarantine list, deciding when to intervene) rely on scattered sources: EPPO lists, ministry instructions, academic guides. Bringing these together quickly and traceably is hard for field users.
 
-**Çözüm:** Kullanıcı bir bitki fotoğrafı yükler. Sistem iki ayrı sonuç üretir ve yan yana gösterir:
+**Solution:** The user uploads a plant photo. The system produces two separate results and shows them side by side:
 
-1. **Standart analiz:** Görsel Gemini ile yorumlanır (tür, belirtiler, şüpheli zararlı/hastalık, istilacı tehditler) ve bir risk değerlendirmesi üretilir (şiddet, aciliyet, yayılma riski, uygulama planı, izleme, yetkililere bildirim gerekliliği).
-2. **Bilgi tabanı analizi:** Aynı tanıdan bir arama sorgusu kurulur, PDF bilgi tabanından (EPPO veri sayfaları, T.C. Tarım ve Orman Bakanlığı talimatları, FAO rehberleri vb.) ilgili sayfalar getirilir ve risk değerlendirmesi bu sayfalara dayandırılır.
+1. **Standard analysis:** The image is interpreted by Gemini (species, symptoms, suspected pests/diseases, invasive threats) and a risk assessment is produced (severity, urgency, spread risk, action plan, monitoring, whether authorities must be notified).
+2. **Knowledge base analysis:** A search query is built from the same diagnosis, relevant pages are retrieved from the PDF knowledge base (EPPO datasheets, Turkish Ministry of Agriculture and Forestry instructions, FAO guides, etc.), and the risk assessment is grounded in those pages.
 
-### Özellikler
+### Features
 
-- **Görsel analizi:** tek görsel yükleme (JPEG, PNG, WebP, HEIC/HEIF, en fazla 10 MB), yapılandırılmış JSON çıktı.
-- **RAG destekli değerlendirme:** özet temelli arama (multi-vector yaklaşımı): sayfanın özeti aranır, ham sayfa metni getirilir.
-- **Kimlik doğrulama:** kayıt, giriş, çıkış, token yenileme; access + refresh JWT, refresh token rotasyonu ve yeniden kullanım tespitinde aile iptali.
-- **2B risk haritası** (`/2dmap`): Leaflet üzerinde [GWIS](https://gwis.jrc.ec.europa.eu/) WMS katmanları (yangın hava indeksi vb.).
-- **API dokümantasyonu:** Swagger UI (`/api-docs`).
-- **Koyu/açık tema** ve Stitch tasarımından uyarlanmış arayüz.
+- **Image analysis:** single image upload (JPEG, PNG, WebP, HEIC/HEIF, up to 10 MB), structured JSON output.
+- **RAG-backed assessment:** summary-based retrieval (multi-vector approach): the page summary is searched, the raw page text is returned.
+- **Authentication:** register, login, logout, token refresh; access + refresh JWTs, refresh token rotation, and family revocation on reuse detection.
+- **2D risk map** (`/2dmap`): [GWIS](https://gwis.jrc.ec.europa.eu/) WMS layers (fire weather index, etc.) on Leaflet. Clicking a point analyses the vegetation around it.
+- **3D map** (`/3dmap`, CesiumJS): one globe for the whole farm, see [3D map](#3d-map).
+- **API documentation:** Swagger UI (`/api-docs`).
+- **Dark/light theme** and a UI adapted from the Stitch design.
 
-## Mimari
+## 3D map
+
+`/3dmap` shows everything about the farm on one CesiumJS globe. Every layer can be switched on and off in the side panel.
+
+| Layer | What it shows |
+|---|---|
+| Parcels | Polygons draped over the terrain, colored by the worst plant status inside. Click one to fly there and read its elevation, slope and aspect with a short interpretation (a south-facing slope dries faster, and so on) |
+| Extruded parcels | The same parcels as prisms. The height is the problem density: critical plants ×3, plants in treatment ×2, watched plants ×1, open tasks ×0.5 (20 to 400 m) |
+| Plant pins and poles | A pin per plant tinted by its health, critical ones pulse, close pins merge into numbered clusters. Poles are taller for a worse status. Click a pin for the photo, last analysis and open tasks |
+| Invasive species | GBIF observations around the farm as 3D points, height and color show the year, inside a translucent dome that marks the analysis radius |
+| Time line | Cesium's own animation and timeline widgets. The pins read the clock, so playing it replays how the plants' health changed from the analysis records |
+| Fire | GWIS burnt areas (last 30 days) and fire weather index draped over the terrain, with the distance to the nearest burnt area |
+| Land cover | CORINE 2018 classes (forest, pasture, farmland, built-up) |
+| 3D buildings | OSM Buildings or Google photorealistic tiles, needs `VITE_CESIUM_ION_TOKEN` |
+| Field tour | A route through the plants that have tasks due today, in walking order, and a camera flight along it |
+| Draw tool | Draw a polygon on the globe and get its area, elevation, slope, aspect and the land cover around it at once, then save it as a parcel |
+
+Elevation, slope and aspect come from Cesium terrain when the globe has it (`sampleTerrainMostDetailed`), and from the free Open-Meteo elevation service otherwise. Slope and aspect are read from the 300 m around a parcel, because the elevation models (30 to 90 m cells) cannot resolve a small plot.
+
+## Architecture
 
 ```mermaid
 flowchart LR
-    U[Kullanıcı] --> W[Web<br/>React + Vite :5000]
+    U[User] --> W[Web<br/>React + Vite :5000]
     W -->|/api| B[Backend<br/>Express :3000]
     B --> M[(MongoDB)]
-    B -->|görsel analizi, risk değerlendirmesi| G[Gemini API]
+    B -->|image analysis, risk assessment| G[Gemini API]
     B -->|/query| R[RAG<br/>Flask :5001]
-    R --> C[(Chroma<br/>kalıcı volume)]
-    R -->|özet + embedding| G
+    R --> C[(Chroma<br/>persistent volume)]
+    R -->|summary + embedding| G
 ```
 
-**Bir `/api/plan-analysis/rag` isteğinin akışı:**
+**Flow of a `/api/plan-analysis/rag` request:**
 
-1. Backend görseli Gemini'ye gönderir, yapılandırılmış tanıyı alır.
-2. Tanıdan arama sorgusu kurulur (tür adı + şüpheli zararlılar + belirtiler).
-3. RAG servisi sorguyu embed eder, Chroma'dan en yakın sayfaları döner.
-4. Backend bu sayfaları bağlam olarak vererek Gemini'ye risk değerlendirmesi yaptırır.
+1. The backend sends the image to Gemini and receives a structured diagnosis.
+2. A search query is built from the diagnosis (species name + suspected pests + symptoms).
+3. The RAG service embeds the query and returns the closest pages from Chroma.
+4. The backend passes these pages to Gemini as context and has it produce a risk assessment.
 
-Getirilen sayfalar yalnızca değerlendirmeyi besler, API yanıtında **döndürülmez**.
+The retrieved pages only feed the assessment; they are **not returned** in the API response.
 
-## Teknolojiler
+## Technologies
 
-| Katman | Teknolojiler |
+| Layer | Technologies |
 |---|---|
 | Web | React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui (Base UI), React Router, TanStack Query, Axios, Leaflet |
 | Backend | Node.js, Express 5, TypeScript (NodeNext ESM), Mongoose 9, JWT, bcrypt, Zod 4, Multer, swagger-jsdoc, `@google/genai` |
 | RAG | Python 3.12, Flask + Gunicorn, ChromaDB, pypdf, `google-genai` |
-| Modeller | Gemini 3.8 Flash (analiz/özetleme), `gemini-embedding-2` (768 boyut, embedding) |
-| Altyapı | Docker Compose (MongoDB, Mongo Express, RAG), npm workspaces |
+| Models | Gemini 3.8 Flash (analysis/summarization), `gemini-embedding-2` (768 dimensions, embedding) |
+| Infrastructure | Docker Compose (MongoDB, Mongo Express, RAG), npm workspaces |
 
-## Repo yapısı
+## Repository structure
 
 ```
 .
 ├── apps/
-│   ├── backend/        Express API (auth, görsel analizi, RAG istemcisi, Swagger)
-│   └── web/            React arayüzü
+│   ├── backend/        Express API (auth, image analysis, RAG client, Swagger)
+│   └── web/            React frontend
 ├── packages/
-│   ├── shared/         ApiResponse, HttpStatusCode, ortak tipler
-│   ├── validators/     Zod şemaları (kayıt, giriş)
-│   └── dto/            API yanıt tipleri
-├── rag/                Flask RAG servisi (Dockerfile, ingest.py, app.py)
-│   ├── data/           Bilgi tabanı PDF'leri (git'e girmez)
-│   └── model.ipynb     İlk RAG denemesi (Colab not defteri)
+│   ├── shared/         ApiResponse, HttpStatusCode, shared types
+│   ├── validators/     Zod schemas (register, login)
+│   └── dto/            API response types
+├── rag/                Flask RAG service (Dockerfile, ingest.py, app.py)
+│   ├── data/           Knowledge base PDFs (not committed to git)
+│   └── model.ipynb     First RAG experiment (Colab notebook)
 ├── docs/               GWIS WMS capabilities
-├── plant_id/           Plant.id API deneme betikleri
+├── plant_id/           Plant.id API test scripts
 ├── compose.yaml        MongoDB, Mongo Express, RAG
 └── tsconfig.base.json
 ```
 
-## Kurulum
+## Setup
 
-### Gereksinimler
+### Requirements
 
-- Node.js 22 (geliştirme ortamı v22.23) ve npm
-- Docker Desktop (MongoDB ve RAG için)
-- Bir **Gemini API anahtarı** ([Google AI Studio](https://aistudio.google.com/)), faturalandırma etkin
+- Node.js 22 (development environment v22.23) and npm
+- Docker Desktop (for MongoDB and RAG)
+- A **Gemini API key** ([Google AI Studio](https://aistudio.google.com/)) with billing enabled
 
-### 1. Depoyu klonla ve bağımlılıkları kur
+### 1. Clone the repository and install dependencies
 
 ```bash
 git clone https://github.com/yagizerdem/DeuHackaton.git
@@ -105,30 +125,30 @@ cd DeuHackaton
 npm install
 ```
 
-### 2. Ortak paketleri derle
+### 2. Build the shared packages
 
-Paketler `dist` klasöründen çalışır. Klonladıktan sonra ve paket kodunu her değiştirdiğinde:
+The packages run from their `dist` folders. After cloning and every time you change package code:
 
 ```bash
 npx tsc -b packages/shared packages/validators packages/dto
 ```
 
-### 3. Ortam dosyalarını oluştur
+### 3. Create the environment files
 
-Bu dosyalar `.gitignore`'dadır, kendin oluşturman gerekir. Değişkenlerin anlamı [aşağıdaki tabloda](#ortam-değişkenleri).
+These files are in `.gitignore`, so you need to create them yourself. The meaning of each variable is in the [table below](#environment-variables).
 
 **`apps/backend/.env.dev`**
 
 ```env
 PORT=3000
 MONGODB_URI=mongodb://user:1234@localhost:27017/depark-hackaton?authSource=admin
-JWT_SECRET=<uzun rastgele bir değer>
+JWT_SECRET=<a long random value>
 JWT_Issuer=depark-hackaton
 JWT_Audience=depark-hackaton-users
 ACCESS_TOKEN_EXPIRATION=15m
 REFRESH_TOKEN_EXPIRATION=60d
 CORS_ORIGIN=http://localhost:5000
-GEMINI_API_KEY=<anahtarın>
+GEMINI_API_KEY=<your key>
 ```
 
 **`apps/web/.env`**
@@ -140,191 +160,192 @@ VITE_API_BASE_URL=http://localhost:3000/api
 **`rag/.env`**
 
 ```env
-GOOGLE_API_KEY=<anahtarın>
+GOOGLE_API_KEY=<your key>
 ```
 
-### 4. Docker servislerini başlat
+### 4. Start the Docker services
 
 ```bash
 docker compose up -d --build
 ```
 
-| Servis | Adres |
+| Service | Address |
 |---|---|
 | MongoDB | `localhost:27017` |
 | Mongo Express | http://localhost:8081 |
 | RAG (Flask) | http://localhost:5001 |
 
-> `compose.yaml` içindeki MongoDB parolaları (`user` / `1234`) yalnızca yerel geliştirme içindir. Sunucuya çıkmadan önce değiştir.
+> The MongoDB passwords in `compose.yaml` (`user` / `1234`) are for local development only. Change them before deploying to a server.
 
-### 5. Bilgi tabanını oluştur (isteğe bağlı ama RAG için gerekli)
+### 5. Build the knowledge base (optional, but required for RAG)
 
-PDF'leri `rag/data/` içine koy, sonra indeksle:
+Put the PDFs in `rag/data/`, then index them:
 
 ```bash
 docker compose run --rm rag python ingest.py
 docker compose restart rag
 ```
 
-Ayrıntılar ve maliyet için [RAG servisi](#rag-servisi) ve [Maliyet](#maliyet) bölümlerine bak. İndeks boşsa `/query` 503 döner ve `/api/plan-analysis/rag` çalışmaz.
+See the [RAG service](#rag-service) and [Cost](#cost) sections for details and cost. If the index is empty, `/query` returns 503 and `/api/plan-analysis/rag` does not work.
 
-### 6. Geliştirme sunucularını çalıştır
+### 6. Run the development servers
 
-İki ayrı terminalde:
+In two separate terminals:
 
 ```bash
 npm run dev -w @DeparkHackaton/backend   # http://localhost:3000
 npm run dev -w @DeparkHackaton/web       # http://localhost:5000
 ```
 
-Sonra:
+Then:
 
-- Uygulama: http://localhost:5000
+- App: http://localhost:5000
 - Swagger UI: http://localhost:3000/api-docs
-- Sağlık kontrolü: http://localhost:3000/health
+- Health check: http://localhost:3000/health
 
-VS Code kullanıyorsan `.vscode/launch.json` içinde backend için bir hata ayıklama yapılandırması var.
+If you use VS Code, `.vscode/launch.json` contains a debug configuration for the backend.
 
-### Üretim derlemesi
+### Production build
 
 ```bash
 npm run build -w @DeparkHackaton/backend   # tsc + tsc-alias
-npm run start -w @DeparkHackaton/backend   # NODE_ENV=production, .env.prod okur
+npm run start -w @DeparkHackaton/backend   # NODE_ENV=production, reads .env.prod
 ```
 
-`.env.prod`, `.env.dev` ile aynı değişkenleri içermelidir. Özellikle `CORS_ORIGIN` (üretimdeki web adresi), `GEMINI_API_KEY` ve gerekiyorsa `RAG_URL` eklenmelidir; bunlar olmadan CORS varsayılana düşer ve görsel analizi çalışmaz.
+`.env.prod` must contain the same variables as `.env.dev`. In particular, `CORS_ORIGIN` (the production web address), `GEMINI_API_KEY` and, if needed, `RAG_URL` must be added; without them CORS falls back to the default and image analysis does not work.
 
-## Ortam değişkenleri
+## Environment variables
 
 ### Backend (`apps/backend/.env.dev` / `.env.prod`)
 
-| Değişken | Açıklama |
+| Variable | Description |
 |---|---|
-| `PORT` | API portu |
-| `MONGODB_URI` | MongoDB bağlantı adresi |
-| `JWT_SECRET` | JWT imzalama anahtarı |
-| `JWT_Issuer`, `JWT_Audience` | JWT `iss` ve `aud` değerleri |
-| `ACCESS_TOKEN_EXPIRATION`, `REFRESH_TOKEN_EXPIRATION` | Token ömürleri (`15m`, `60d` gibi) |
-| `CORS_ORIGIN` | İzinli origin'ler, virgülle ayrılmış (varsayılan `http://localhost:5000`) |
-| `GEMINI_API_KEY` | Görsel analizi ve risk değerlendirmesi için |
-| `RAG_URL` | RAG servisi adresi (varsayılan `http://localhost:5001`) |
+| `PORT` | API port |
+| `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | JWT signing key |
+| `JWT_Issuer`, `JWT_Audience` | JWT `iss` and `aud` values |
+| `ACCESS_TOKEN_EXPIRATION`, `REFRESH_TOKEN_EXPIRATION` | Token lifetimes (e.g. `15m`, `60d`) |
+| `CORS_ORIGIN` | Allowed origins, comma-separated (default `http://localhost:5000`) |
+| `GEMINI_API_KEY` | For image analysis and risk assessment |
+| `RAG_URL` | RAG service address (default `http://localhost:5001`) |
 
 ### Web (`apps/web/.env`)
 
-| Değişken | Açıklama |
+| Variable | Description |
 |---|---|
-| `VITE_API_BASE_URL` | API tabanı, `/api` ile biter |
+| `VITE_API_BASE_URL` | API base URL, ends with `/api` |
+| `VITE_CESIUM_ION_TOKEN` | Optional. A free [Cesium ion](https://ion.cesium.com/) token turns on Cesium World Terrain, OSM 3D buildings and Google photorealistic tiles in the 3D map. Without it the globe is flat on OpenStreetMap imagery |
 
 ### RAG (`rag/.env`)
 
-| Değişken | Varsayılan | Açıklama |
+| Variable | Default | Description |
 |---|---|---|
-| `GOOGLE_API_KEY` (veya `GEMINI_API_KEY`) | | Özetleme ve embedding için |
-| `GEMINI_MODEL` | `gemini-3.8-flash` | Sayfa özetleme modeli |
-| `EMBEDDING_MODEL` | `gemini-embedding-2` | Embedding modeli |
-| `EMBEDDING_DIMS` | `768` | Vektör boyutu |
-| `INGEST_WORKERS` | `16` | Paralel özetleme çağrıları |
-| `EMBED_WORKERS` | `8` | Paralel embedding çağrıları |
-| `AUTO_INGEST` | kapalı | `1` olursa konteyner her açılışta indeksler |
+| `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) | | For summarization and embedding |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Page summarization model |
+| `EMBEDDING_MODEL` | `gemini-embedding-2` | Embedding model |
+| `EMBEDDING_DIMS` | `768` | Vector dimensions |
+| `INGEST_WORKERS` | `16` | Parallel summarization calls |
+| `EMBED_WORKERS` | `8` | Parallel embedding calls |
+| `AUTO_INGEST` | off | If `1`, the container indexes on every start |
 
-`rag/.env` içindeki `PROJECT_ID`, `REGION` gibi değerleri yalnızca `rag/model.ipynb` kullanır.
+Values such as `PROJECT_ID` and `REGION` in `rag/.env` are only used by `rag/model.ipynb`.
 
-## API uç noktaları
+## API endpoints
 
-Tüm yanıtlar `{ httpStatusCode, message, data?, formErrors? }` biçimindedir. Ayrıntılı şemalar Swagger UI'da.
+All responses have the shape `{ httpStatusCode, message, data?, formErrors? }`. Detailed schemas are in Swagger UI.
 
-| Metot | Yol | Auth | Açıklama |
+| Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/health` | | Servis ve veritabanı durumu |
+| GET | `/health` | | Service and database status |
 | GET | `/api-docs` | | Swagger UI |
-| POST | `/api/auth/register` | | Kayıt |
-| POST | `/api/auth/login` | | Giriş (token çifti + cookie) |
-| POST | `/api/auth/logout` | | Çıkış (cookie'leri siler) |
-| POST | `/api/auth/refresh` | | Token yenileme (rotasyon) |
-| GET | `/api/auth/me` | ✔ | Oturum açmış kullanıcı |
-| POST | `/api/plan-analysis` | ✔ | Görsel analizi + risk değerlendirmesi |
-| POST | `/api/plan-analysis/rag` | ✔ | Aynısı, bilgi tabanına dayalı değerlendirme |
+| POST | `/api/auth/register` | | Register |
+| POST | `/api/auth/login` | | Login (token pair + cookie) |
+| POST | `/api/auth/logout` | | Logout (clears cookies) |
+| POST | `/api/auth/refresh` | | Token refresh (rotation) |
+| GET | `/api/auth/me` | ✔ | Signed-in user |
+| POST | `/api/plan-analysis` | ✔ | Image analysis + risk assessment |
+| POST | `/api/plan-analysis/rag` | ✔ | Same, with knowledge-base-grounded assessment |
 
-Görsel uç noktaları `multipart/form-data` ile tek bir `image` alanı bekler:
+The image endpoints expect `multipart/form-data` with a single `image` field:
 
 ```bash
 curl -X POST http://localhost:3000/api/plan-analysis/rag \
   -H "Authorization: Bearer <accessToken>" \
-  -F "image=@yaprak.jpg"
+  -F "image=@leaf.jpg"
 ```
 
-Hata kodları: `401` yetkisiz, `413` görsel 10 MB'dan büyük, `415` desteklenmeyen tür, `503` Gemini veya RAG servisine ulaşılamıyor.
+Error codes: `401` unauthorized, `413` image larger than 10 MB, `415` unsupported type, `503` Gemini or the RAG service is unreachable.
 
-## RAG servisi
+## RAG service
 
-`rag/` klasörü bağımsız bir Flask uygulamasıdır. Buradaki "eğitim" model eğitimi değil, **indekslemedir**: hiçbir model ağırlığı değişmez.
+The `rag/` folder is a standalone Flask application. "Training" here is not model training but **indexing**: no model weights change.
 
-### İndeksleme (`ingest.py`)
+### Indexing (`ingest.py`)
 
-`rag/data/` altındaki her PDF'in her sayfası için:
+For every page of every PDF under `rag/data/`:
 
-1. `pypdf` ile metin çıkarılır (OCR yoktur, metni çıkarılamayan sayfalar atlanır).
-2. Gemini sayfayı yapılandırılmış bir İngilizce özete çevirir (`rag/prompts.py`).
-3. Özet `gemini-embedding-2` ile vektöre çevrilir.
-4. Vektör, ham sayfa metni ve özet Chroma'ya yazılır.
+1. Text is extracted with `pypdf` (there is no OCR; pages whose text cannot be extracted are skipped).
+2. Gemini turns the page into a structured English summary (`rag/prompts.py`).
+3. The summary is converted to a vector with `gemini-embedding-2`.
+4. The vector, the raw page text and the summary are written to Chroma.
 
-Arama **özet üzerinden** yapılır, geri dönen şey **ham sayfa metnidir**. Sayfa kimliği `dosya adı + sayfa no` olduğundan, indekslenmiş sayfalar atlanır ve komut güvenle yeniden çalıştırılabilir. Özetler 16 paralel çağrıyla üretilir; hata alan sayfa atlanır, sonraki çalıştırmada tekrar denenir.
+Search runs **over the summary**; what comes back is the **raw page text**. Since the page ID is `file name + page number`, already indexed pages are skipped and the command can safely be re-run. Summaries are generated with 16 parallel calls; a page that fails is skipped and retried on the next run.
 
-> Bir PDF'in içeriğini değiştirirsen sayfa kimliği aynı kaldığından eski özet kalır. Dosyayı yeniden adlandır veya `rag_chroma` volume'unu silip baştan indeksle.
+> If you change a PDF's content, the page ID stays the same, so the old summary remains. Rename the file, or delete the `rag_chroma` volume and re-index from scratch.
 
-### Sorgu
+### Query
 
 ```bash
 curl -X POST http://localhost:5001/query \
   -H "Content-Type: application/json" \
-  -d '{"query": "Ceratocystis platani nasıl yayılır", "k": 5}'
+  -d '{"query": "How does Ceratocystis platani spread", "k": 5}'
 ```
 
-Yanıt: `results[]` içinde `source`, `page`, `score` (benzerlik), `summary` ve `text`. `k` 1 ile 20 arasındadır.
+Response: `results[]` containing `source`, `page`, `score` (similarity), `summary` and `text`. `k` is between 1 and 20.
 
-### Kalıcılık
+### Persistence
 
-İndeks `rag_chroma` adlı Docker volume'unda tutulur. Konteyneri silmek, yeniden başlatmak veya image'ı yeniden derlemek indeksi silmez. **`docker compose down -v` silmeye yol açar** (MongoDB verisi de aynı şekilde gider).
+The index is stored in the Docker volume named `rag_chroma`. Deleting or restarting the container, or rebuilding the image, does not delete the index. **`docker compose down -v` deletes it** (MongoDB data is lost the same way).
 
-### Bilgi tabanı kaynakları
+### Knowledge base sources
 
-PDF'ler `.gitignore`'dadır ve repoda yoktur. Hazırlanan bilgi tabanı şu kaynaklardan oluşur:
+The PDFs are in `.gitignore` and are not in the repository. The prepared knowledge base consists of the following sources:
 
-- **EPPO:** A1/A2 karantina listeleri ve çeşitli zararlı veri sayfaları (*Anoplophora*, *Ceratocystis platani*, *Rhynchophorus ferrugineus*, *Xylella fastidiosa*, *Popillia japonica* vb.)
-- **T.C. Tarım ve Orman Bakanlığı:** bildirimi zorunlu zararlı listesi, zeytin entegre mücadele talimatı, palmiye kırmızı böceği talimatları
-- **Orman Genel Müdürlüğü:** 305 sayılı tebliğ (orman zararlıları ile mücadele)
-- **FAO:** ormancılıkta fitosaniter standartlar rehberi ve IPM kılavuzları
-- Üniversite ders notları ve açık erişimli makaleler
+- **EPPO:** A1/A2 quarantine lists and various pest datasheets (*Anoplophora*, *Ceratocystis platani*, *Rhynchophorus ferrugineus*, *Xylella fastidiosa*, *Popillia japonica*, etc.)
+- **Turkish Ministry of Agriculture and Forestry:** list of notifiable pests, integrated olive pest management instruction, red palm weevil instructions
+- **General Directorate of Forestry:** Communiqué No. 305 (control of forest pests)
+- **FAO:** guide to phytosanitary standards in forestry and IPM manuals
+- University lecture notes and open-access articles
 
-Kendi belgelerini `rag/data/` içine koyup yukarıdaki indeksleme komutunu çalıştırarak bilgi tabanını genişletebilirsin. Kullandığın belgelerin yeniden dağıtım şartlarını kontrol et.
+You can extend the knowledge base by putting your own documents in `rag/data/` and running the indexing command above. Check the redistribution terms of the documents you use.
 
-## Maliyet
+## Cost
 
-Gemini kullanımı ücretlidir. Aşağıdakiler, fiyat derleme sitelerindeki rakamlara göre **tahmindir** (resmî Google fiyat sayfasıyla doğrulanmadı):
+Gemini usage is paid. The figures below are **estimates** based on price aggregator sites (not verified against the official Google pricing page):
 
-- Sayfa indeksleme: yaklaşık **$0,008 / sayfa**. Bunun ~%95'i özetleme, embedding payı çok küçüktür. Düşünme (thinking) token'ları bu hesaba dahil değildir, maliyeti artırabilir.
-- Her `/api/plan-analysis/rag` isteği Gemini'yi **3 kez** çağırır (görsel analizi, soru embedding'i, risk değerlendirmesi). Arayüzde "Analyze plant" iki kutuyu birden çalıştırdığı için toplam 5 çağrı yapar.
-- Bakiye bittiğinde Gemini `402 RESOURCE_EXHAUSTED` döner. Bu durumda indeksleme yarıda durur ve API uç noktaları `503` verir. İndeksleme otomatik değildir, bu yüzden bakiye bitse bile konteyner kredi harcamaz.
+- Page indexing: about **$0.008 / page**. ~95% of this is summarization; the embedding share is very small. Thinking tokens are not included in this estimate and can increase the cost.
+- Each `/api/plan-analysis/rag` request calls Gemini **3 times** (image analysis, question embedding, risk assessment). Because "Analyze plant" in the UI runs both boxes at once, it makes 5 calls in total.
+- When the balance runs out, Gemini returns `402 RESOURCE_EXHAUSTED`. In that case indexing stops midway and the API endpoints return `503`. Indexing is not automatic, so the container does not spend credits even if the balance runs out.
 
-## Geliştirme notları
+## Development notes
 
-- **Paket derlemesi:** `packages/*` içeriği `dist` üzerinden tüketilir. Bir paketteki dosyayı değiştirince `npx tsc -b packages/shared packages/validators packages/dto` yeniden çalıştırılmalıdır. Kök dizindeki `npm run dev` (`tsc -b --watch`) paketleri izlemez.
-- **Yol takma adları:** backend `@/*`, `@utils/*`, `@services/*` gibi alias'lar kullanır. Geliştirmede `tsx`, derlemede `tsc-alias` çözer. `tsx` tip denetimi yapmaz, `npm run type-check -w @DeparkHackaton/backend` çalıştır.
-- **Ortam dosyaları geç yüklenir:** backend `.env` dosyasını `server.ts` içinde, import'lar değerlendirildikten sonra okur. Bu yüzden env değişkenleri modül yüklenirken değil, çağrı anında okunmalıdır.
-- **Arayüz tasarımı:** Google Stitch projesinden türetilen tasarım jetonları `apps/web/src/index.css` içinde `stitch-*` değişkenleri olarak tanımlıdır. Bileşenler `apps/web/src/components/` altındadır, yeniden kullanılabilir shadcn/ui bileşenleri `components/ui/` içindedir. Ayrıntılar için `AGENTS.md` ve `DESIGN-*.md` dosyalarına bak.
-- **Commit mesajları:** Conventional Commits (`feat(web): ...`, `fix(backend): ...`).
+- **Package builds:** `packages/*` contents are consumed through `dist`. After changing a file in a package, `npx tsc -b packages/shared packages/validators packages/dto` must be re-run. The root `npm run dev` (`tsc -b --watch`) does not watch the packages.
+- **Path aliases:** the backend uses aliases such as `@/*`, `@utils/*` and `@services/*`. They are resolved by `tsx` in development and by `tsc-alias` in builds. `tsx` does not type-check; run `npm run type-check -w @DeparkHackaton/backend`.
+- **Environment files load late:** the backend reads the `.env` file in `server.ts`, after the imports have been evaluated. Therefore environment variables must be read at call time, not at module load time.
+- **UI design:** design tokens derived from the Google Stitch project are defined as `stitch-*` variables in `apps/web/src/index.css`. Components live under `apps/web/src/components/`, and reusable shadcn/ui components are in `components/ui/`. See `AGENTS.md` and the `DESIGN-*.md` files for details.
+- **Commit messages:** Conventional Commits (`feat(web): ...`, `fix(backend): ...`).
 
-## Bilinen sınırlamalar
+## Known limitations
 
-- **RAG alaka eşiği yok:** sistem her zaman en yakın sayfaları getirir, ne kadar uzak olursa olsun. Korpusta olmayan bir bitki (ör. palmiye) için alakasız sayfalar (skor ~0,52) değerlendirmeye karışabilir. Gerçek eşleşmelerde skor ~0,70 ve üzeridir.
-- **Korpus kapsamı sınırlı:** çınar, *Anoplophora*, orman zararlıları ve zeytin ağırlıklıdır. Kapsam dışı bitkilerde bilgi tabanı katkı sağlamaz.
-- **OCR yok:** taranmış (görsel) PDF sayfaları indekslenmez.
-- **Değerlendirme ölçülmedi:** RAG için Recall@k, MRR ve faithfulness gibi metrikler henüz ölçülmedi.
-- **Çift Gemini çağrısı:** iki sonuç kutusu aynı görseli ayrı ayrı analiz eder, bu maliyeti ve süreyi artırır.
-- **Web derlemesi:** `npm run build -w @DeparkHackaton/web`, `components/ui/scroll-area.tsx` içindeki kullanılmayan `React` import'u yüzünden `TS6133` hatası verir.
-- **Test yok:** otomatik test takımı bulunmuyor.
-- **Yanıtın doğruluğu:** çıktılar bir karar destek aracıdır, uzman görüşünün veya resmî bildirimin yerine geçmez.
+- **No RAG relevance threshold:** the system always retrieves the closest pages, no matter how far away they are. For a plant not in the corpus (e.g. palm), irrelevant pages (score ~0.52) can leak into the assessment. Real matches score ~0.70 and above.
+- **Limited corpus coverage:** mostly plane trees, *Anoplophora*, forest pests and olive. The knowledge base adds nothing for out-of-scope plants.
+- **No OCR:** scanned (image) PDF pages are not indexed.
+- **Evaluation not measured:** metrics such as Recall@k, MRR and faithfulness have not been measured for RAG yet.
+- **Duplicate Gemini calls:** the two result boxes analyze the same image separately, which increases cost and latency.
+- **Web build:** `npm run build -w @DeparkHackaton/web` fails with a `TS6133` error because of an unused `React` import in `components/ui/scroll-area.tsx`.
+- **No tests:** there is no automated test suite.
+- **Accuracy of responses:** the outputs are a decision support tool and do not replace expert opinion or official notification.
 
-## Lisans
+## License
 
-MIT, bkz. [License.txt](License.txt).
+MIT, see [License.txt](License.txt).

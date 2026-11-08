@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import Home from "@pages/home-page";
 import RegisterPage from "@pages/auth/register-page";
 import LoginPage from "@pages/auth/login-page";
@@ -10,7 +10,7 @@ import RecordsPage from "@pages/farm/records-page";
 import TasksPage from "@pages/farm/tasks-page";
 import PlantsOverviewPage from "@pages/farm/plants-overview-page";
 import TaskBoardPage from "@pages/farm/task-board-page";
-import InvasiveSpeciesPage from "@pages/invasive-species/invasive-species-page";
+import Map3DPage from "@pages/3dmap/map-3d-page";
 import PlantProtectionAssistant from "@pages/plant-protection-assistant";
 
 const router = createBrowserRouter([
@@ -45,7 +45,9 @@ const router = createBrowserRouter([
   { path: "/tasks/board", element: <TaskBoardPage /> },
     ],
   },
-  { path: "/invasive-species", element: <InvasiveSpeciesPage /> },
+  { path: "/3dmap", element: <Map3DPage /> },
+  // the old name of the 3D map
+  { path: "/invasive-species", element: <Navigate to="/3dmap" replace /> },
 ]);
 
 export default router;

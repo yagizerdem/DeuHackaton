@@ -11,7 +11,7 @@ interface RadiusSelectProps {
 export default function RadiusSelect({ value, onChange }: RadiusSelectProps) {
   return (
     <Field>
-      <FieldLabel htmlFor="analysis-radius">Analysis radius</FieldLabel>
+      <FieldLabel htmlFor="analysis-radius">Analiz yarıçapı</FieldLabel>
       <NativeSelect
         id="analysis-radius"
         value={value}

@@ -7,11 +7,11 @@ const CLOSE_KM = 1;
 const NEAR_KM = 5;
 
 function proximity(km: number) {
-  if (km <= CLOSE_KM) return { label: "Very close", style: "text-destructive" };
+  if (km <= CLOSE_KM) return { label: "Çok yakın", style: "text-destructive" };
   if (km <= NEAR_KM) {
-    return { label: "Nearby", style: "text-stitch-on-tertiary-container" };
+    return { label: "Yakında", style: "text-stitch-on-tertiary-container" };
   }
-  return { label: "Further away", style: "text-muted-foreground" };
+  return { label: "Daha uzakta", style: "text-muted-foreground" };
 }
 
 interface ThreatSummaryProps {
@@ -24,7 +24,7 @@ export default function ThreatSummary({ data }: ThreatSummaryProps) {
       <div className="flex items-start gap-2 rounded-lg border border-border/50 bg-card p-3 text-sm">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-stitch-secondary" />
         <p className="text-muted-foreground">
-          No tracked invasive species were observed within {data.radiusKm} km.
+          {data.radiusKm} km içinde izlenen istilacı tür gözlenmedi.
         </p>
       </div>
     );
@@ -41,14 +41,14 @@ export default function ThreatSummary({ data }: ThreatSummaryProps) {
             {label}: {data.nearest.distanceKm} km
           </p>
           <p className="text-muted-foreground">
-            The closest threat is <em>{data.nearest.species}</em>.
+            En yakın tehdit: <em>{data.nearest.species}</em>.
           </p>
         </div>
       </div>
 
       <div>
         <p className="mb-1.5 font-stitch-label text-stitch-label-md font-semibold uppercase tracking-wider text-muted-foreground">
-          {data.observations.length} observations
+          {data.observations.length} gözlem
         </p>
         <ul className="space-y-1 text-sm">
           {data.species.map((s) => (
@@ -64,8 +64,7 @@ export default function ThreatSummary({ data }: ThreatSummaryProps) {
 
       {data.truncated && (
         <p className="text-xs text-muted-foreground">
-          There are more observations than shown. Use a smaller radius for the
-          full picture.
+          Gösterilenden fazla gözlem var. Tamamı için yarıçapı küçült.
         </p>
       )}
     </div>

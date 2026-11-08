@@ -46,9 +46,10 @@ export async function fetchVegetation(
   lat: number,
   lon: number,
   signal?: AbortSignal,
+  radiusKm = VEGETATION_RADIUS_KM,
 ) {
   const response = await API.get<ApiResponse<VegetationAnalysis>>("/vegetation", {
-    params: { lat, lon, radiusKm: VEGETATION_RADIUS_KM },
+    params: { lat, lon, radiusKm },
     signal,
   });
   return response.data.data!;

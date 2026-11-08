@@ -36,7 +36,7 @@ export default function LocationSelector({
   const places = useMemo<Place[]>(() => {
     const fromParcels = (parcels.data ?? []).map((parcel) => ({
       id: `parcel-${parcel.id}`,
-      label: `Parcel: ${parcel.name}`,
+      label: `Parsel: ${parcel.name}`,
       // the average of the corners is close enough to the middle of a field
       lat:
         parcel.polygon.reduce((sum, [, lat]) => sum + lat, 0) /
@@ -50,7 +50,7 @@ export default function LocationSelector({
         ? [
             {
               id: `plant-${plant.id}`,
-              label: `Plant: ${plant.name}`,
+              label: `Bitki: ${plant.name}`,
               ...plant.location,
             },
           ]
@@ -65,14 +65,14 @@ export default function LocationSelector({
     navigator.geolocation.getCurrentPosition(
       ({ coords }) =>
         onCenterChange({ lat: coords.latitude, lng: coords.longitude }),
-      () => toast.error("Could not read your location"),
+      () => toast.error("Konumun okunamadı"),
     );
   }
 
   return (
     <div className="space-y-3">
       <Field>
-        <FieldLabel htmlFor="analysis-place">Location</FieldLabel>
+        <FieldLabel htmlFor="analysis-place">Konum</FieldLabel>
         <NativeSelect
           id="analysis-place"
           value={selected?.id ?? ""}
@@ -82,7 +82,7 @@ export default function LocationSelector({
           }}
         >
           <NativeSelectOption value="" disabled>
-            {places.length === 0 ? "No saved places" : "Custom point"}
+            {places.length === 0 ? "Kayıtlı yer yok" : "Özel nokta"}
           </NativeSelectOption>
           {places.map((place) => (
             <NativeSelectOption key={place.id} value={place.id}>
@@ -103,11 +103,11 @@ export default function LocationSelector({
           onClick={() => onPickOnGlobeChange(!pickOnGlobe)}
         >
           <Crosshair />
-          {pickOnGlobe ? "Click the globe…" : "Pick on globe"}
+          {pickOnGlobe ? "Haritaya tıkla…" : "Haritadan seç"}
         </Button>
         <Button variant="outline" size="sm" onClick={moveToMyPosition}>
           <LocateFixed />
-          My position
+          Konumum
         </Button>
       </div>
     </div>

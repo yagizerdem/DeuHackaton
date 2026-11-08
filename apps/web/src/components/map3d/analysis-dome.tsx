@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Cartesian3, Color, CustomDataSource } from "cesium";
-import { useViewer } from "@components/invasive-species/viewer-context";
+import { useGroundHeights } from "@components/map3d/use-ground-heights";
+import { useViewer } from "@components/map3d/viewer-context";
 import type { MapCenter } from "@/lib/invasive-species-api";
 
 interface AnalysisDomeProps {
@@ -21,14 +22,16 @@ export default function AnalysisDome({
   heightM,
 }: AnalysisDomeProps) {
   const viewer = useViewer();
+  const centerPoint = useMemo(() => [center], [center]);
+  const [ground = 0] = useGroundHeights(centerPoint);
 
   useEffect(() => {
     const radiusM = radiusKm * 1000;
-    const position = Cartesian3.fromDegrees(center.lng, center.lat, 0);
+    const position = Cartesian3.fromDegrees(center.lng, center.lat, ground);
 
     const source = new CustomDataSource("analysis-area");
     source.entities.add({
-      name: "Analysis radius",
+      name: "Analiz yarıçapı",
       position,
       ellipsoid: {
         radii: new Cartesian3(radiusM, radiusM, heightM),
@@ -51,7 +54,7 @@ export default function AnalysisDome({
       },
     });
     source.entities.add({
-      name: "Farm",
+      name: "Analiz merkezi",
       position,
       point: {
         pixelSize: 14,
@@ -67,7 +70,7 @@ export default function AnalysisDome({
         void added.then(() => viewer.dataSources.remove(source, true));
       }
     };
-  }, [viewer, center, radiusKm, heightM]);
+  }, [viewer, center, radiusKm, heightM, ground]);
 
   return null;
 }

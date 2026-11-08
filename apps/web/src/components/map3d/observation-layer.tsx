@@ -1,19 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Cartesian3, Color, CustomDataSource } from "cesium";
 import type { InvasiveObservationDto } from "@DeparkHackaton/dto";
-import { useViewer } from "@components/invasive-species/viewer-context";
+import { useGroundHeights } from "@components/map3d/use-ground-heights";
+import { useViewer } from "@components/map3d/viewer-context";
+import { ENTITY_ID } from "@/lib/map3d/selection";
 import { yearFraction, yearRgb, type YearRange } from "@/lib/year-color";
 
 // the lowest points would sit on the ground without this lift
 const BASE_HEIGHT_M = 40;
-const ID_PREFIX = "obs-";
 
 interface ObservationLayerProps {
   observations: InvasiveObservationDto[];
   yearRange: YearRange | null;
   /** height of the newest observations, in meters */
   maxHeightM: number;
-  onSelect: (id: string | null) => void;
 }
 
 // One 3D point per GBIF observation. Its height and color both show the year,
@@ -22,22 +22,27 @@ export default function ObservationLayer({
   observations,
   yearRange,
   maxHeightM,
-  onSelect,
 }: ObservationLayerProps) {
   const viewer = useViewer();
+  const points = useMemo(
+    () => observations.map((o) => ({ lat: o.lat, lng: o.lng })),
+    [observations],
+  );
+  const ground = useGroundHeights(points);
 
   useEffect(() => {
     if (!yearRange) return;
 
     const source = new CustomDataSource("invasive-observations");
-    for (const o of observations) {
+    observations.forEach((o, i) => {
       const t = yearFraction(o.year, yearRange);
-      const height = BASE_HEIGHT_M + t * maxHeightM;
+      const base = ground[i]!;
+      const height = base + BASE_HEIGHT_M + t * maxHeightM;
       const [r, g, b] = yearRgb(t);
       const color = Color.fromBytes(r, g, b);
 
       source.entities.add({
-        id: ID_PREFIX + o.id,
+        id: ENTITY_ID.observation + o.id,
         name: o.species,
         position: Cartesian3.fromDegrees(o.lng, o.lat, height),
         point: {
@@ -50,7 +55,7 @@ export default function ObservationLayer({
           positions: Cartesian3.fromDegreesArrayHeights([
             o.lng,
             o.lat,
-            0,
+            base,
             o.lng,
             o.lat,
             height,
@@ -59,25 +64,16 @@ export default function ObservationLayer({
           material: color.withAlpha(0.45),
         },
       });
-    }
+    });
 
     const added = viewer.dataSources.add(source);
-    const onSelectionChange = () => {
-      const id = viewer.selectedEntity?.id;
-      onSelect(typeof id === "string" && id.startsWith(ID_PREFIX)
-        ? id.slice(ID_PREFIX.length)
-        : null);
-    };
-    viewer.selectedEntityChanged.addEventListener(onSelectionChange);
-
     return () => {
-      viewer.selectedEntityChanged.removeEventListener(onSelectionChange);
       // the viewer may already be destroyed when the whole globe unmounts
       if (!viewer.isDestroyed()) {
         void added.then(() => viewer.dataSources.remove(source, true));
       }
     };
-  }, [viewer, observations, yearRange, maxHeightM, onSelect]);
+  }, [viewer, observations, yearRange, maxHeightM, ground]);
 
   return null;
 }
