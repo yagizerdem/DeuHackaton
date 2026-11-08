@@ -13,6 +13,15 @@ import { getApiErrorMessage } from "@lib/api-error";
 import globalEventEmitter from "@lib/event-emitter";
 import { Link } from "react-router";
 
+const NAV_LINKS = [
+  { to: "/plant-protection-assistant", label: "Analyze" },
+  { to: "/2dmap", label: "2D Map" },
+  { to: "/invasive-species", label: "Invasive Species", requiresLogin: true },
+  { to: "/plants", label: "My Garden", requiresLogin: true },
+  { to: "/plants/overview", label: "Plant Overview", requiresLogin: true },
+  { to: "/tasks/board", label: "Task Board", requiresLogin: true },
+];
+
 export default function SiteHeader() {
   const [modal, setModal] = useState<"login" | "register" | null>(null);
   const { user, setUser } = useAuth();
@@ -52,25 +61,16 @@ export default function SiteHeader() {
             </span>
           </Link>
           <nav className="ml-6 hidden items-center gap-6 md:flex">
-            <Link
-              to="/plant-protection-assistant"
-              className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Analyze
-            </Link>
-            <Link
-              to="/2dmap"
-              className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              2D Map
-            </Link>
-            {user && (
-              <Link
-                to="/plants"
-                className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                My Garden
-              </Link>
+            {NAV_LINKS.filter((link) => user || !link.requiresLogin).map(
+              (link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                  {link.label}
+                </Link>
+              ),
             )}
           </nav>
         </div>
