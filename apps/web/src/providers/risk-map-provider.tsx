@@ -163,7 +163,7 @@ export interface LatLngPoint {
 /** [south, west, north, east] */
 export type MapBounds = [number, number, number, number];
 
-export type TRightPanel = "chart" | "locator" | null;
+export type TRightPanel = "chart" | "locator" | "vegetation" | null;
 
 export interface RiskMapContextValue {
   mapOptions: MapOptions;
@@ -172,12 +172,15 @@ export interface RiskMapContextValue {
   damageOptions: DamageAssessmentOptions;
   rightPanel: TRightPanel;
   chartPoint: LatLngPoint | null;
+  /** point the vegetation analysis is shown for */
+  vegetationPoint: LatLngPoint | null;
   setMapOptions: (patch: Partial<MapOptions>) => void;
   setSelectedDate: (date: string) => void;
   setForecastOptions: (patch: Partial<ForecastOptions>) => void;
   setDamageOptions: (patch: Partial<DamageAssessmentOptions>) => void;
   setRightPanel: (panel: TRightPanel) => void;
   setChartPoint: (point: LatLngPoint) => void;
+  setVegetationPoint: (point: LatLngPoint) => void;
   /** Kept in a ref so panning the map does not re-render consumers. */
   setMapBounds: (bounds: MapBounds) => void;
   getMapBounds: () => MapBounds | null;
@@ -198,6 +201,9 @@ export function RiskMapProvider({ children }: { children: React.ReactNode }) {
   );
   const [rightPanel, setRightPanel] = useState<TRightPanel>(null);
   const [chartPoint, setChartPoint] = useState<LatLngPoint | null>(null);
+  const [vegetationPoint, setVegetationPoint] = useState<LatLngPoint | null>(
+    null,
+  );
   const mapBounds = useRef<MapBounds | null>(null);
 
   const setMapOptions = useCallback(
@@ -228,12 +234,14 @@ export function RiskMapProvider({ children }: { children: React.ReactNode }) {
       damageOptions,
       rightPanel,
       chartPoint,
+      vegetationPoint,
       setMapOptions,
       setSelectedDate,
       setForecastOptions,
       setDamageOptions,
       setRightPanel,
       setChartPoint,
+      setVegetationPoint,
       setMapBounds,
       getMapBounds,
     }),
@@ -244,6 +252,7 @@ export function RiskMapProvider({ children }: { children: React.ReactNode }) {
       damageOptions,
       rightPanel,
       chartPoint,
+      vegetationPoint,
       setMapOptions,
       setForecastOptions,
       setDamageOptions,

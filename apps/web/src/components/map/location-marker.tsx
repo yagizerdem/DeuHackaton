@@ -6,7 +6,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 // leaflet resolves its default icon paths at runtime, which breaks once bundled
-const defaultIcon = new Icon({
+export const defaultIcon = new Icon({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,

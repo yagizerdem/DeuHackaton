@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
+import SaveRecordDialog from "@components/farm/save-record-dialog";
 import AnalysisForm from "@components/plant-protection-assistant/analysis-form";
 import AnalysisResult from "@components/plant-protection-assistant/analysis-result";
 import ResultSkeleton from "@components/plant-protection-assistant/result-skeleton";
@@ -45,14 +46,23 @@ function AssistantWorkspace() {
           <div className="space-y-6 lg:col-span-7">
             {mutation.isPending && <ResultSkeleton />}
             {mutation.data && !mutation.isPending && (
-              <AnalysisResult result={mutation.data} title="Standard analysis" />
+              <>
+                <AnalysisResult
+                  result={mutation.data}
+                  title="Standard analysis"
+                />
+                <SaveRecordDialog result={mutation.data} mode="standard" />
+              </>
             )}
             {ragMutation.isPending && <ResultSkeleton />}
             {ragMutation.data && !ragMutation.isPending && (
-              <AnalysisResult
-                result={ragMutation.data}
-                title="Knowledge base analysis"
-              />
+              <>
+                <AnalysisResult
+                  result={ragMutation.data}
+                  title="Knowledge base analysis"
+                />
+                <SaveRecordDialog result={ragMutation.data} mode="rag" />
+              </>
             )}
           </div>
         </div>

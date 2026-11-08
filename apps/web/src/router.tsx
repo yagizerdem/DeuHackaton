@@ -1,8 +1,16 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import Home from "@pages/home-page";
 import RegisterPage from "@pages/auth/register-page";
 import LoginPage from "@pages/auth/login-page";
 import MapPage from "@pages/2dmap/map-page";
+import FarmLayout from "@/layouts/farm-layout";
+import PlantsPage from "@pages/farm/plants-page";
+import ParcelsPage from "@pages/farm/parcels-page";
+import RecordsPage from "@pages/farm/records-page";
+import TasksPage from "@pages/farm/tasks-page";
+import PlantsOverviewPage from "@pages/farm/plants-overview-page";
+import TaskBoardPage from "@pages/farm/task-board-page";
+import Map3DPage from "@pages/3dmap/map-3d-page";
 import PlantProtectionAssistant from "@pages/plant-protection-assistant";
 
 const router = createBrowserRouter([
@@ -26,6 +34,20 @@ const router = createBrowserRouter([
     path: "/2dmap",
     element: <MapPage />,
   },
+  {
+    element: <FarmLayout />,
+    children: [
+      { path: "/plants", element: <PlantsPage /> },
+      { path: "/parcels", element: <ParcelsPage /> },
+      { path: "/records", element: <RecordsPage /> },
+      { path: "/tasks", element: <TasksPage /> },
+  { path: "/plants/overview", element: <PlantsOverviewPage /> },
+  { path: "/tasks/board", element: <TaskBoardPage /> },
+    ],
+  },
+  { path: "/3dmap", element: <Map3DPage /> },
+  // the old name of the 3D map
+  { path: "/invasive-species", element: <Navigate to="/3dmap" replace /> },
 ]);
 
 export default router;

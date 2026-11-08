@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import {
-  CircleMarker,
+  Circle,
   MapContainer,
-  Popup,
+  Marker,
   TileLayer,
   useMapEvents,
   WMSTileLayer,
 } from "react-leaflet";
 import { latLngBounds, type LatLng } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import RiskSummary from "@components/risk/risk-summary";
-import {
-  fetchFireRisk,
-  LEVEL_STYLE,
-  type FireRiskAssessment,
-} from "@lib/risk-api";
+import { defaultIcon } from "@components/map/location-marker";
+import { VEGETATION_RADIUS_KM } from "@lib/vegetation-api";
 import { useEventEmitter } from "@hooks/use-event-emitter";
 import type {
   ResizeRiskMapEvent,
@@ -27,44 +23,19 @@ import {
   useRiskMap,
 } from "@providers/risk-map-provider";
 
-type Probe =
-  | { status: "loading"; position: LatLng }
-  | { status: "done"; position: LatLng; risk: FireRiskAssessment }
-  | { status: "error"; position: LatLng; message: string };
-
 const IZMIR: [number, number] = [38.42, 27.14];
 
-function ClickToAssess({
-  date,
-  onProbe,
-}: {
-  date?: string;
-  onProbe: (probe: Probe) => void;
-}) {
-  const pending = useRef<AbortController | null>(null);
-  const { setChartPoint } = useRiskMap();
+/** A click marks the point and opens the vegetation analysis for it. */
+function ClickToAnalyze({ onPick }: { onPick: (position: LatLng) => void }) {
+  const { setChartPoint, setVegetationPoint, setRightPanel } = useRiskMap();
 
   useMapEvents({
-    async click(e) {
-      setChartPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
-      pending.current?.abort();
-      const controller = new AbortController();
-      pending.current = controller;
-
-      const position = e.latlng;
-      onProbe({ status: "loading", position });
-      try {
-        const risk = await fetchFireRisk(
-          position.lat,
-          position.lng,
-          date,
-          controller.signal,
-        );
-        onProbe({ status: "done", position, risk });
-      } catch (err) {
-        if (controller.signal.aborted) return;
-        onProbe({ status: "error", position, message: String(err) });
-      }
+    click(e) {
+      const point = { lat: e.latlng.lat, lng: e.latlng.lng };
+      setChartPoint(point); // the fire danger chart follows the clicked point too
+      setVegetationPoint(point);
+      setRightPanel("vegetation");
+      onPick(e.latlng);
     },
   });
 
@@ -134,9 +105,7 @@ function getFireDangerLayer({
 }
 
 export default function RiskMap() {
-  const [probe, setProbe] = useState<Probe | null>(null);
-  const level = probe?.status === "done" ? probe.risk.structural.level : null;
-  const color = level ? LEVEL_STYLE[level].color : "#64748b";
+  const [picked, setPicked] = useState<LatLng | null>(null);
 
   const { eventData } = useEventEmitter<ResizeRiskMapEvent>("resize-risk-map");
   const mapRef = useRef<ComponentRef<typeof MapContainer>>(null);
@@ -168,23 +137,17 @@ export default function RiskMap() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap"
       />
-      <ClickToAssess date={date} onProbe={setProbe} />
+      <ClickToAnalyze onPick={setPicked} />
       <MapViewSync />
-      {probe && (
-        <CircleMarker
-          // re-mount so the popup opens again for every new click
-          key={`${probe.position.lat},${probe.position.lng},${probe.status}`}
-          center={probe.position}
-          radius={10}
-          pathOptions={{ color, fillColor: color, fillOpacity: 0.6 }}
-          eventHandlers={{ add: (e) => e.target.openPopup() }}
-        >
-          <Popup minWidth={240}>
-            {probe.status === "loading" && "Risk hesaplanıyor…"}
-            {probe.status === "error" && `Hata: ${probe.message}`}
-            {probe.status === "done" && <RiskSummary risk={probe.risk} />}
-          </Popup>
-        </CircleMarker>
+      {picked && (
+        <>
+          <Marker position={picked} icon={defaultIcon} />
+          <Circle
+            center={picked}
+            radius={VEGETATION_RADIUS_KM * 1000}
+            pathOptions={{ color: "#15803d", fillOpacity: 0.08, weight: 2 }}
+          />
+        </>
       )}
 
       {mapOptions.countryBoundariesLayer && (
