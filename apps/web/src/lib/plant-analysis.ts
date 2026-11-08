@@ -31,9 +31,18 @@ export interface PlantRiskAssessment {
   rationale: string;
 }
 
+export interface KnowledgeBaseSource {
+  source: string;
+  page: number;
+  score: number;
+  summary: string;
+}
+
 export interface PlantAnalysisResult {
   analysis: PlantAnalysis;
   assessment: PlantRiskAssessment;
+  // only the knowledge base analysis returns sources
+  sources?: KnowledgeBaseSource[];
 }
 
 function imageForm(image: File) {
