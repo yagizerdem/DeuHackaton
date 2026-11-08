@@ -10,6 +10,7 @@
     "dev": "cross-env NODE_ENV=development nodemon --watch src --ext ts,json --exec tsx src/server.ts",
     "type-check": "tsc --noEmit"
   },
+  "main": "dist/src/server.js",
   "dependencies": {
     "@DeparkHackaton/dto": "^1.0.0",
     "@DeparkHackaton/shared": "^1.0.0",

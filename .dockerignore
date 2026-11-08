@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+.git
+.github
+.vercel
+.env*
+apps/web/*
+!apps/web/package.json
+web-docs
+rag
+sunum
+docs
