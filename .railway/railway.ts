@@ -8,15 +8,11 @@ export default defineRailway(() => {
   // build every release twice, so the service has an empty source.
   //
   // The backend needs the workspace packages (shared, dto, validators), so it
-  // builds from the repo root and compiles them first.
+  // builds from the repo-root Dockerfile, which compiles them first and sets
+  // the start command.
   const backend = service("backend", {
     source: empty(),
-    build: {
-      builder: "RAILPACK",
-      buildCommand:
-        "npx tsc -b packages/shared packages/dto packages/validators && npm run build -w @DeparkHackaton/backend",
-    },
-    start: "npm run start -w @DeparkHackaton/backend",
+    build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
     healthcheck: "/health",
     deploy: { restartPolicyType: "ON_FAILURE", restartPolicyMaxRetries: 3 },
     env: {
