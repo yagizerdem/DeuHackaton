@@ -58,6 +58,12 @@ export default function SiteHeader() {
             >
               Analyze
             </Link>
+            <Link
+              to="/2dmap"
+              className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              2D Map
+            </Link>
           </nav>
         </div>
 

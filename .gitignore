@@ -155,3 +155,17 @@ vite.config.ts.timestamp-*
 .claude/worktrees/*
 .claude/worktree/**/*
 .claude/worktrees/**/*
+
+.env
+.venv
+.venv/*
+config/__pycache__/
+config/__pycache__/*
+# Python
+__pycache__/
+*.pyc
+
+# RAG corpus (large PDFs) and local index
+rag/data/*
+!rag/data/.gitkeep
+rag/chroma/

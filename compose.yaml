@@ -39,9 +39,36 @@ services:
     networks:
       - mongodb_network
 
+  # RAG (Flask). The container only serves the existing index. To index the PDFs
+  # in rag/data (costs Gemini credits), then restart so the server sees the new pages:
+  #   docker compose run --rm rag python ingest.py && docker compose restart rag
+  # Set AUTO_INGEST=1 in rag/.env to index on every start instead.
+  rag:
+    build: ./rag
+    container_name: rag
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./rag/.env
+    volumes:
+      - ./rag/data:/app/data:ro
+      - rag_chroma:/app/chroma
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - "-c"
+        - "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"
+      interval: 30s
+      start_period: 120s
+      retries: 3
+      timeout: 5s
+
 volumes:
   mongodb_data:
     driver: local
+  rag_chroma:
 
 networks:
   mongodb_network:
