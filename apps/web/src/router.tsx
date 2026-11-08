@@ -8,6 +8,9 @@ import PlantsPage from "@pages/farm/plants-page";
 import ParcelsPage from "@pages/farm/parcels-page";
 import RecordsPage from "@pages/farm/records-page";
 import TasksPage from "@pages/farm/tasks-page";
+import PlantsOverviewPage from "@pages/farm/plants-overview-page";
+import TaskBoardPage from "@pages/farm/task-board-page";
+import InvasiveSpeciesPage from "@pages/invasive-species/invasive-species-page";
 import PlantProtectionAssistant from "@pages/plant-protection-assistant";
 
 const router = createBrowserRouter([
@@ -38,8 +41,11 @@ const router = createBrowserRouter([
       { path: "/parcels", element: <ParcelsPage /> },
       { path: "/records", element: <RecordsPage /> },
       { path: "/tasks", element: <TasksPage /> },
+  { path: "/plants/overview", element: <PlantsOverviewPage /> },
+  { path: "/tasks/board", element: <TaskBoardPage /> },
     ],
   },
+  { path: "/invasive-species", element: <InvasiveSpeciesPage /> },
 ]);
 
 export default router;

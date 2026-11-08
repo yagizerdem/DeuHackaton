@@ -20,7 +20,6 @@ const without = (set: ReadonlySet<string>, ids: string[]) => {
  * shows a toast with an undo button. The delete requests are only sent once the
  * window is over, so undo never has to restore anything on the server. Leaving
  * the page sends them at once. A closed tab sends nothing, so the items stay.
- * `remove` has to be a stable function, a new one would flush the pending deletes.
  */
 export function useUndoableDelete(remove: (id: string) => Promise<unknown>) {
   const queryClient = useQueryClient();
@@ -67,10 +66,16 @@ export function useUndoableDelete(remove: (id: string) => Promise<unknown>) {
     [commit],
   );
 
+  // Flush on leaving only. The ref keeps this effect from re-running (and
+  // flushing early) whenever `commit` gets a new identity.
+  const commitRef = useRef(commit);
+  useEffect(() => {
+    commitRef.current = commit;
+  }, [commit]);
   useEffect(() => {
     const pending = batches.current;
-    return () => pending.forEach((batch) => void commit(batch));
-  }, [commit]);
+    return () => pending.forEach((batch) => void commitRef.current(batch));
+  }, []);
 
   return { hidden, schedule };
 }

@@ -70,6 +70,9 @@ export default function PlantsOverviewPage() {
   const { hidden, schedule } = useUndoableDelete(requestDeletePlant);
 
   const q = params.get("q") ?? "";
+  // The input keeps its own text. Bound straight to the url it loses letters
+  // when typing is faster than the navigation that follows each key.
+  const [search, setSearch] = useState(q);
   const species = params.get("species") ?? "";
   const status = params.get("status") ?? "";
   const parcel = params.get("parcel") ?? "";
@@ -175,6 +178,7 @@ export default function PlantsOverviewPage() {
   }
 
   function clearFilters() {
+    setSearch("");
     setParams(
       (current) => {
         const next = new URLSearchParams();
@@ -203,7 +207,7 @@ export default function PlantsOverviewPage() {
       title="Bitki envanteri"
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" render={<Link to="/tasks/board" />}>
+          <Button variant="outline" nativeButton={false} render={<Link to="/tasks/board" />}>
             <ListChecks />
             Görev panosu
           </Button>
@@ -223,10 +227,13 @@ export default function PlantsOverviewPage() {
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             type="search"
-            value={q}
+            value={search}
             placeholder="Ad, tür, not veya etiket ara"
             aria-label="Bitki ara"
-            onChange={(e) => setParam("q", e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setParam("q", e.target.value);
+            }}
             className="h-8 pl-8"
           />
         </div>

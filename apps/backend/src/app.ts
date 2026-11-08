@@ -3,6 +3,7 @@ import { errorHandler } from "@middlewares/error-handler.js";
 import { authRouter } from "@routes/auth-route.js";
 import { planAnalysisRouter } from "@routes/plan-analysis-route.js";
 import { vegetationRouter } from "@routes/vegetation-route.js";
+import { invasiveSpeciesRouter } from "@routes/invasive-species-route.js";
 import { plantRouter } from "@routes/plant-route.js";
 import { parcelRouter } from "@routes/parcel-route.js";
 import { analysisRecordRouter } from "@routes/analysis-record-route.js";
@@ -49,6 +50,7 @@ app.get("/api-docs.json", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/plan-analysis", planAnalysisRouter);
 app.use("/api/vegetation", vegetationRouter);
+app.use("/api/invasive-species", invasiveSpeciesRouter);
 app.use("/api/plants", plantRouter);
 app.use("/api/parcels", parcelRouter);
 app.use("/api/analysis-records", analysisRecordRouter);
