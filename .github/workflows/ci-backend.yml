@@ -9,6 +9,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      match: ${{ steps.check-tag.outputs.match }}
     steps:
       - name: Check Tag
         id: check-tag
