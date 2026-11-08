@@ -12,7 +12,7 @@ const config: Config = {
   url: process.env.DOCS_URL ?? "http://localhost:3001",
   baseUrl: process.env.DOCS_BASE_URL ?? "/",
   organizationName: "yagizerdem",
-  projectName: "DeuHackaton.github.io",
+  projectName: "DeuHackaton",
   deploymentBranch: "gh-pages",
   trailingSlash: false,
 
