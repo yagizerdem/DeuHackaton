@@ -9,6 +9,7 @@
 // Seed users are marked by the @seed.local email domain, only they and the data
 // they own are ever deleted. Every seed user logs in with SEED_PASSWORD.
 import { randomUUID } from "node:crypto";
+import path from "node:path";
 import bcrypt from "bcrypt";
 import { fakerTR as faker } from "@faker-js/faker";
 import mongoose from "mongoose";
@@ -22,7 +23,7 @@ import { Task } from "@models/task-entity.js";
 import { AnalysisRecord } from "@models/analysis-record-entity.js";
 
 const SEED_DOMAIN = "@seed.local";
-const SEED_PASSWORD = "Seed12345!";
+export const SEED_PASSWORD = "Seed12345!";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WIKIPEDIA_SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/";
 const USER_AGENT = "DeparkSeeder/1.0 (hackathon project)";
@@ -248,9 +249,7 @@ function taskDoc(owner: unknown, plantId: unknown, parcelId: unknown) {
 
 // ---- run -------------------------------------------------------------------
 
-async function clearSeedData() {
-  const users = await User.find({ email: new RegExp(`${SEED_DOMAIN.replace(".", "\\.")}$`) }).select("_id");
-  const owners = users.map((u) => u._id);
+export async function deleteOwnedData(owners: mongoose.Types.ObjectId[]) {
   const [records, tasks, plants, parcels, tokens] = await Promise.all([
     AnalysisRecord.deleteMany({ owner: { $in: owners } }),
     Task.deleteMany({ owner: { $in: owners } }),
@@ -258,78 +257,97 @@ async function clearSeedData() {
     Parcel.deleteMany({ owner: { $in: owners } }),
     RefreshToken.deleteMany({ user: { $in: owners } }),
   ]);
-  await User.deleteMany({ _id: { $in: owners } });
   console.log(
-    `removed ${owners.length} users, ${tokens.deletedCount} tokens, ${parcels.deletedCount} parcels, ` +
+    `removed ${tokens.deletedCount} tokens, ${parcels.deletedCount} parcels, ` +
       `${plants.deletedCount} plants, ${tasks.deletedCount} tasks, ${records.deletedCount} analysis records`,
   );
+}
+
+async function clearSeedData() {
+  const users = await User.find({ email: new RegExp(`${SEED_DOMAIN.replace(".", "\\.")}$`) }).select("_id");
+  const owners = users.map((u) => u._id);
+  await deleteOwnedData(owners);
+  await User.deleteMany({ _id: { $in: owners } });
+  console.log(`removed ${owners.length} users`);
+}
+
+export type SeedTotals = { tokens: number; parcels: number; plants: number; tasks: number; records: number };
+
+// Fills one user with a farm: tokens, parcels, plants, analysis records and tasks.
+export async function seedUserData(user: { _id: unknown }): Promise<SeedTotals> {
+  const totals: SeedTotals = { tokens: 0, parcels: 0, plants: 0, tasks: 0, records: 0 };
+
+  const tokens = await RefreshToken.insertMany(refreshTokenDocs(user._id));
+  totals.tokens += tokens.length;
+
+  const farm: Point = {
+    lat: REGION.lat + faker.number.float({ min: -REGION.spreadDeg, max: REGION.spreadDeg }),
+    lng: REGION.lng + faker.number.float({ min: -REGION.spreadDeg, max: REGION.spreadDeg }),
+  };
+  const parcelCount = faker.number.int({ min: 1, max: 3 });
+  const parcelSpecs = Array.from({ length: parcelCount }, (_, i) =>
+    // parcels of one farm sit next to each other
+    parcelDoc(user._id, { lat: farm.lat + i * 0.004, lng: farm.lng + faker.number.float({ min: 0, max: 0.004 }) }),
+  );
+  const parcels = await Parcel.insertMany(parcelSpecs.map(({ bounds: _bounds, ...doc }) => doc));
+  totals.parcels += parcels.length;
+
+  const plantDocs = [];
+  const speciesOfPlant: Species[] = [];
+  const tagsOfPlant: string[][] = [];
+  for (const [i, parcel] of parcels.entries()) {
+    const { bounds } = parcelSpecs[i]!;
+    for (let n = faker.number.int({ min: 2, max: 5 }); n > 0; n--) {
+      const species = faker.helpers.arrayElement(SPECIES);
+      const photo = await fetchPhoto(species.photoPage);
+      const tags = faker.helpers.arrayElements(TAGS, { min: 0, max: 3 });
+      speciesOfPlant.push(species);
+      tagsOfPlant.push(tags);
+      plantDocs.push({
+        owner: user._id,
+        name: species.name,
+        latinName: species.latin,
+        careNote: faker.datatype.boolean(0.6) ? faker.lorem.sentence() : undefined,
+        tags,
+        location: {
+          lat: round6(faker.number.float({ min: bounds.south, max: bounds.north })),
+          lng: round6(faker.number.float({ min: bounds.west, max: bounds.east })),
+        },
+        parcelId: parcel._id,
+        photo: photo ?? undefined,
+        photoUpdatedAt: photo ? new Date() : undefined,
+      });
+    }
+  }
+  const plants = await Plant.insertMany(plantDocs);
+  totals.plants += plants.length;
+
+  const records = await AnalysisRecord.insertMany(
+    plants.flatMap((plant, i) => recordDocs(user._id, plant._id, speciesOfPlant[i]!, tagsOfPlant[i]!)),
+  );
+  totals.records += records.length;
+
+  const tasks = await Task.insertMany(
+    Array.from({ length: faker.number.int({ min: 3, max: 10 }) }, () => {
+      const plant = faker.helpers.arrayElement(plants);
+      // a task belongs to a plant, its parcel, or both
+      const target = faker.helpers.arrayElement(["plant", "parcel", "both"] as const);
+      return taskDoc(user._id, target === "parcel" ? undefined : plant._id, target === "plant" ? undefined : plant.parcelId);
+    }),
+  );
+  totals.tasks += tasks.length;
+
+  return totals;
 }
 
 async function seed(userCount: number) {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
   const users = await User.insertMany(userDocs(userCount, passwordHash));
-  const totals = { tokens: 0, parcels: 0, plants: 0, tasks: 0, records: 0 };
+  const totals: SeedTotals = { tokens: 0, parcels: 0, plants: 0, tasks: 0, records: 0 };
 
   for (const user of users) {
-    const tokens = await RefreshToken.insertMany(refreshTokenDocs(user._id));
-    totals.tokens += tokens.length;
-
-    const farm: Point = {
-      lat: REGION.lat + faker.number.float({ min: -REGION.spreadDeg, max: REGION.spreadDeg }),
-      lng: REGION.lng + faker.number.float({ min: -REGION.spreadDeg, max: REGION.spreadDeg }),
-    };
-    const parcelCount = faker.number.int({ min: 1, max: 3 });
-    const parcelSpecs = Array.from({ length: parcelCount }, (_, i) =>
-      // parcels of one farm sit next to each other
-      parcelDoc(user._id, { lat: farm.lat + i * 0.004, lng: farm.lng + faker.number.float({ min: 0, max: 0.004 }) }),
-    );
-    const parcels = await Parcel.insertMany(parcelSpecs.map(({ bounds: _bounds, ...doc }) => doc));
-    totals.parcels += parcels.length;
-
-    const plantDocs = [];
-    const speciesOfPlant: Species[] = [];
-    const tagsOfPlant: string[][] = [];
-    for (const [i, parcel] of parcels.entries()) {
-      const { bounds } = parcelSpecs[i]!;
-      for (let n = faker.number.int({ min: 2, max: 5 }); n > 0; n--) {
-        const species = faker.helpers.arrayElement(SPECIES);
-        const photo = await fetchPhoto(species.photoPage);
-        const tags = faker.helpers.arrayElements(TAGS, { min: 0, max: 3 });
-        speciesOfPlant.push(species);
-        tagsOfPlant.push(tags);
-        plantDocs.push({
-          owner: user._id,
-          name: species.name,
-          latinName: species.latin,
-          careNote: faker.datatype.boolean(0.6) ? faker.lorem.sentence() : undefined,
-          tags,
-          location: {
-            lat: round6(faker.number.float({ min: bounds.south, max: bounds.north })),
-            lng: round6(faker.number.float({ min: bounds.west, max: bounds.east })),
-          },
-          parcelId: parcel._id,
-          photo: photo ?? undefined,
-          photoUpdatedAt: photo ? new Date() : undefined,
-        });
-      }
-    }
-    const plants = await Plant.insertMany(plantDocs);
-    totals.plants += plants.length;
-
-    const records = await AnalysisRecord.insertMany(
-      plants.flatMap((plant, i) => recordDocs(user._id, plant._id, speciesOfPlant[i]!, tagsOfPlant[i]!)),
-    );
-    totals.records += records.length;
-
-    const tasks = await Task.insertMany(
-      Array.from({ length: faker.number.int({ min: 3, max: 10 }) }, () => {
-        const plant = faker.helpers.arrayElement(plants);
-        // a task belongs to a plant, its parcel, or both
-        const target = faker.helpers.arrayElement(["plant", "parcel", "both"] as const);
-        return taskDoc(user._id, target === "parcel" ? undefined : plant._id, target === "plant" ? undefined : plant.parcelId);
-      }),
-    );
-    totals.tasks += tasks.length;
+    const t = await seedUserData(user);
+    for (const key of Object.keys(totals) as (keyof SeedTotals)[]) totals[key] += t[key];
   }
 
   console.log(
@@ -361,7 +379,10 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// importing this file (seed-user.ts) must not start a full seed
+if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
