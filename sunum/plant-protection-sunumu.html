@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f2e8">
+<meta name="description" content="Plant Protection Assistant: fotoğraftan bitki teşhisi, kaynaklara dayalı risk değerlendirmesi ve çiftlik için tek bir 3B harita. Depark Hackaton.">
+<title>Plant Protection Assistant Sunumu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Sol bölüm rayı, tek sahne, polen parçacıkları */
+:root{
+  color-scheme:light;
+  --bg:#f5f2e8;--deep:#e9e5d6;--paper:#25301f;--gold:#8a6d1f;--leaf:#3f7d3a;--lime:#4f8f2f;--red:#c4451c;--amber:#c77a12;
+  --text:#25301f;--muted:#5d6652;--soft:#3f4936;--line:#1f2a1a24;--ok:#3f8a3a;
+  --serif:'Fraunces',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(70% 60% at 80% 100%,#3f7d3a22,transparent 70%),radial-gradient(60% 50% at 10% 0%,#8a6d1f14,transparent 70%)}
+.grain{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+#pollen{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+.masthead{position:relative;z-index:5;height:60px;padding:0 3.5%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#f5f2e8cc;backdrop-filter:blur(6px)}
+.wordmark{font-family:var(--serif);font-size:22px;letter-spacing:.02em;display:flex;align-items:baseline;gap:10px}
+.wordmark b{font-weight:600}.wordmark b i{font-style:normal;color:var(--leaf)}
+.wordmark span{font-family:var(--sans);font-size:14px;color:#6a7360}
+.edition{font-size:13px;color:var(--muted)}
+.head-actions{display:flex;gap:6px}
+.head-actions button{font-size:13px;color:#4d5743;padding:8px 12px;border-radius:3px}
+.head-actions button:hover{color:var(--text);background:#1f2a1a0d}
+
+.show{position:relative;z-index:2;flex:1;min-height:0;display:grid;grid-template-columns:84px 1fr}
+.chapter-rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;border-right:1px solid var(--line);background:#ffffff66;overflow-y:auto;scrollbar-width:none}
+.chapter-rail button{min-height:34px;flex:1;max-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--serif);font-size:15px;color:#6a7360;border-left:2px solid transparent;transition:.25s}
+.chapter-rail button span{font-family:var(--sans);font-size:10px;text-align:center;line-height:1.1;max-width:72px}
+.chapter-rail button:hover{color:var(--text)}
+.chapter-rail button.active{background:#3f7d3a12;color:var(--lime);border-left-color:var(--leaf)}
+#stage{position:relative;min-width:0;overflow:hidden;outline:0}
+.scene{position:absolute;inset:0;padding:2.4vh 4.5%;display:grid;grid-template-columns:minmax(0,46fr) minmax(0,54fr);align-items:center;gap:3%;visibility:hidden;pointer-events:none}
+.scene.on{visibility:visible;pointer-events:auto}
+.scene.wide{grid-template-columns:minmax(0,1fr)}
+.col{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.rise{opacity:0;transform:translateY(22px)}
+.scene.on .rise{animation:rise .8s var(--ease) both;animation-delay:calc(var(--i,0)*110ms + 80ms)}
+.scene.on.back .rise{animation-name:riseL}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes riseL{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+
+.kicker{display:flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#5d6652;margin-bottom:14px}
+.kicker::before{content:'';width:24px;height:1px;background:#a9b985}
+.display{font-family:var(--serif);font-weight:400;font-size:clamp(28px,min(3.7vw,6.6vh),64px);line-height:1.06;letter-spacing:-.012em;margin-bottom:16px;text-wrap:balance}
+.display.big{font-size:clamp(36px,min(5.2vw,9vh),88px)}
+.display .payoff{color:var(--lime);font-style:italic}
+.lead{font-size:clamp(15px,min(1.35vw,2.4vh),20px);line-height:1.5;color:#4d5743;max-width:600px;margin-bottom:14px}
+.byline{font-size:13px;color:var(--muted);letter-spacing:.03em;margin-top:6px}
+.stamp{font-family:var(--serif);font-weight:600;letter-spacing:.24em;font-size:clamp(13px,1.3vw,18px);color:var(--leaf);margin-bottom:22px;display:flex;align-items:center;gap:14px}
+.stamp::after{content:'';flex:0 0 60px;height:1px;background:var(--leaf)}
+.tag{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border:1px dashed #3f7d3a80;border-radius:99px;font-size:12.5px;color:var(--lime);background:#3f7d3a12;margin-bottom:14px}
+.note{font-size:12px;color:#6a7360;letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:5px 12px;border:1px solid #8a6d1f45;border-radius:99px;font-size:13px;color:#6b5517}
+.replay{align-self:flex-start;font-size:13px;color:var(--gold);padding:7px 0;border-bottom:1px solid #8a6d1f55;margin-top:8px}
+.panel{border:1px solid var(--line);background:#ffffff8c;border-radius:4px;padding:clamp(14px,2.4vh,26px)}
+.lab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+
+.steps{list-style:none;display:flex;flex-direction:column;gap:6px;max-width:560px}
+.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;padding:clamp(7px,1.3vh,12px) 12px;border-left:2px solid transparent;opacity:.36;transition:opacity .6s,border-color .6s,background .6s}
+.steps li b{font-family:var(--serif);font-weight:600;font-size:clamp(17px,min(1.7vw,3vh),24px);display:block;color:var(--text)}
+.steps li span{font-size:clamp(13px,min(1.1vw,2vh),15.5px);line-height:1.4;color:#3f4936}
+.steps li i{font-style:normal;font-family:var(--serif);color:var(--gold);font-size:18px;line-height:1.5}
+.steps li.lit{opacity:1;border-left-color:var(--leaf);background:linear-gradient(90deg,#3f7d3a14,transparent)}
+
+/* telefon (kapak) */
+.phonewrap{display:flex;justify-content:center;align-items:center}
+.phone{position:relative;height:min(74vh,600px);aspect-ratio:9/18.5;border:7px solid #3a3d36;border-radius:34px;background:#121411;overflow:hidden;box-shadow:0 26px 70px #0008,0 0 0 1px #1f2a1a1a}
+.phone{--text:#ecefe3;--lime:#b9e07f;--gold:#dcc183;--muted:#a8ad9c;color:#ecefe3}
+.phone .res li{background:#ffffff14;color:#cdd1c0}
+.phone::before{content:'';position:absolute;z-index:4;top:8px;left:50%;width:30%;height:14px;margin-left:-15%;border-radius:9px;background:#000}
+.ps{position:absolute;inset:0;padding:38px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.ps h4{font-family:var(--serif);font-weight:600;font-size:17px}
+.view{position:relative;flex:1;border-radius:10px;overflow:hidden;background:linear-gradient(#26301f,#141a11 60%,#1d2616)}
+.view svg{position:absolute;inset:0;width:100%;height:100%}
+.beam{position:absolute;left:0;right:0;height:22%;top:-24%;background:linear-gradient(180deg,transparent,#b9e07f2e 70%,#b9e07fcc 99%,transparent);opacity:0}
+.beam.go{animation:beamv 1.9s ease-in-out both}
+@keyframes beamv{0%{top:-24%;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:102%;opacity:0}}
+.spot{opacity:0;transition:opacity .6s}.spot.on{opacity:1}
+.corner{position:absolute;inset:12px;border:1.5px solid #ffffff55;border-radius:6px}
+.res{list-style:none;display:flex;flex-direction:column;gap:6px}
+.res li{font-size:12.5px;color:#3f4936;background:#ffffff8c;border-radius:7px;padding:8px 10px;opacity:0;transform:translateY(8px);transition:.5s var(--ease)}
+.res li.lit{opacity:1;transform:none}
+.res li b{color:var(--lime);font-weight:500}
+.res li.warn b{color:var(--amber)}
+
+/* kartlar */
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%}
+.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-top:2px solid var(--gold);background:#ffffff8c;border-radius:4px;padding:clamp(12px,2.2vh,22px);opacity:0;transform:translateY(16px)}
+.scene.on .card{animation:rise .7s var(--ease) both;animation-delay:calc(var(--k)*140ms + .5s)}
+.card h3{font-family:var(--serif);font-weight:600;font-size:clamp(18px,1.7vw,24px);color:var(--gold)}
+.card p{font-size:clamp(13.5px,1.12vw,15.5px);line-height:1.45;color:#3f4936}
+.card .tag{margin:auto 0 0;font-size:12px}
+.card.me{border-color:#3f7d3a80;background:#3f7d3a12;border-top-color:var(--leaf)}.card.me h3{color:var(--lime)}
+
+/* uçtan uca akış */
+.pipe{display:grid;grid-template-columns:minmax(0,1fr) clamp(56px,7vw,110px) minmax(0,.8fr) clamp(56px,7vw,110px) minmax(0,1fr);align-items:center;gap:0}
+.stackc{display:flex;flex-direction:column;gap:9px;min-width:0}
+.tile{padding:clamp(10px,1.8vh,16px) 14px;border:1px solid var(--line);border-radius:4px;background:#ffffff8c;font-size:clamp(13.5px,1.12vw,16px);opacity:.3;transition:.6s}
+.tile small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.tile.lit{opacity:1;border-color:#8a6d1f66;background:#8a6d1f10}
+.tile.res2{border-left:2px solid var(--leaf)}
+.flowline{position:relative;height:2px;background:#8a6d1f40;overflow:visible}
+.flowline i{position:absolute;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px var(--lime);animation:run 1.4s linear infinite;animation-delay:var(--d,0s)}
+@keyframes run{0%{left:0;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% - 10px);opacity:0}}
+.hub{display:flex;flex-direction:column;align-items:center;gap:8px;padding:clamp(14px,2.6vh,24px) 8px;border:1px solid #3f7d3a80;background:#3f7d3a12;border-radius:6px;text-align:center}
+.hub b{font-family:var(--serif);font-weight:600;font-size:clamp(17px,1.7vw,24px)}
+.hub span{font-size:13px;color:#3f4936}
+.hub svg{width:clamp(48px,5vw,72px);height:clamp(48px,5vw,72px)}
+.colhead{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+
+/* pano (çiftlik) */
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;height:min(60vh,430px)}
+.bcol{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);background:#ffffff8c;border-radius:6px;padding:12px}
+.bcol h4{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:500;display:flex;justify-content:space-between}
+.bcol h4 em{font-style:normal;color:var(--muted)}
+.bcard{padding:10px 12px;border-radius:6px;background:#ffffff;border:1px solid #1f2a1a1a;font-size:14px;line-height:1.3}
+.bcard small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.bcard.hero{border-color:#3f7d3a99;background:#3f7d3a1c;animation:landing .7s var(--ease)}
+@keyframes landing{from{transform:translateY(-14px);opacity:.2}to{transform:none;opacity:1}}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+
+/* harita / sahne ortak */
+.scan{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:12px;height:min(76vh,640px)}
+.scan .map{position:relative;border:1px solid var(--line);background:#e9e5d6;border-radius:4px;overflow:hidden;min-height:0}
+.scan svg{position:absolute;inset:0;width:100%;height:100%}
+.contour{fill:none;stroke:#8a6d1f26;stroke-width:1}
+.parcel{fill:#3f7d3a00;stroke:var(--gold);stroke-width:2.2;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.3s ease-in-out,fill .8s}
+.parcel.drawn{stroke-dashoffset:0}.parcel.hot{fill:#3f7d3a30}
+.out{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.kv{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.kv li{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#3f4936;opacity:0;transform:translateX(10px);transition:.5s var(--ease)}
+.kv li.lit{opacity:1;transform:none}
+.kv li b{color:var(--lime);font-weight:500;text-align:right}
+.ping{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--lime);opacity:0;transition:opacity .4s}
+.ping.on{opacity:1}
+.ping::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--lime);animation:pingr 1.5s ease-out infinite}
+@keyframes pingr{to{transform:scale(5);opacity:0}}
+.seg{display:flex;gap:5px}.seg i{height:9px;border-radius:2px;transition:width .9s var(--ease)}
+.pbar{display:grid;grid-template-columns:90px 1fr 40px;gap:10px;align-items:center;font-size:13px;color:#3f4936;opacity:0;transition:opacity .5s}
+.pbar.lit{opacity:1}
+.pbar .t{height:8px;border-radius:2px;background:#1f2a1a1a;overflow:hidden}
+.pbar .t i{display:block;height:100%;width:0;transition:width 1s var(--ease)}
+.pbar b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+
+/* katmanlar */
+.iso{position:relative;width:min(100%,62vh);aspect-ratio:1;margin:auto;perspective:1500px}
+.stack{--gap:clamp(26px,5.4vh,54px);position:absolute;inset:0;transform-style:preserve-3d;transform:translateY(5%) rotateX(60deg) rotateZ(-40deg) scale(.82);transition:transform 1.5s var(--ease)}
+.plane{position:absolute;inset:0;border:1px solid #8a6d1f5c;background:#8a6d1f0b;opacity:0;transform:translateZ(calc(var(--k)*var(--gap) + 140px));transition:transform 1s var(--ease),opacity .7s,border-color 1s,background 1s}
+.plane.in{opacity:1;transform:translateZ(calc(var(--k)*var(--gap)))}
+.plane svg{position:absolute;inset:0;width:100%;height:100%}
+.plane:first-child{background:#e9e5d6e6}
+.stack.flat{transform:none}
+.stack.flat .plane{transform:none;border-color:transparent;background:transparent}
+.stack.flat .plane:first-child{background:#e9e5d6;border-color:var(--line)}
+.over{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .7s}
+.over.on{opacity:1}
+.lbl{font:600 10.5px var(--sans);fill:var(--text);paint-order:stroke;stroke:#e9e5d6;stroke-width:3.5px}
+.flick{animation:flick 1.3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes flick{50%{opacity:.45;transform:scale(1.25)}}
+
+/* yükselen parseller */
+.bars{position:relative;display:flex;align-items:flex-end;justify-content:space-around;gap:3%;height:min(52vh,400px);padding:0 4% 34px;border-bottom:1px solid var(--line)}
+.bar{position:relative;flex:1;max-width:120px;height:var(--h);transform-origin:bottom;transform:scaleY(0);transition:transform 1.2s var(--ease);transition-delay:calc(var(--k)*.18s);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 78%,#000),var(--c));border-radius:2px 2px 0 0;box-shadow:inset 0 3px 0 #ffffff40}
+.bar.up{transform:scaleY(1)}
+.bar .v{position:absolute;left:0;right:0;top:-26px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text);opacity:0;transition:opacity .6s 1s}
+.bar.up .v{opacity:1}
+.bar .n{position:absolute;left:-10%;right:-10%;bottom:-28px;text-align:center;font-size:12.5px;color:var(--muted)}
+.formula{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:#3f4936}
+.formula b{color:var(--lime);font-weight:500}
+
+/* zaman çizelgesi ve rota */
+.tlbox{display:flex;flex-direction:column;gap:18px}
+.pins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.pin{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;border:1px solid var(--line);border-radius:6px;background:#ffffff8c;font-size:13.5px}
+.pin i{width:22px;height:22px;border-radius:50%;background:#94998a;box-shadow:0 0 0 5px #1f2a1a14;transition:background .7s,box-shadow .7s}
+.pin i.pulse{animation:pulsep 1.1s ease-in-out infinite}
+@keyframes pulsep{50%{transform:scale(1.3)}}
+.dateval{font-family:var(--serif);font-size:clamp(22px,min(2.4vw,4.2vh),36px);color:var(--gold)}
+.dateval.flip{animation:flip .5s}
+@keyframes flip{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.track{position:relative;height:30px}
+.track::before{content:'';position:absolute;left:0;right:0;top:14px;height:2px;background:repeating-linear-gradient(90deg,#1f2a1a33 0 1px,transparent 1px 10%),#1f2a1a1a}
+.thumb{position:absolute;top:6px;left:0;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 5px #4f8f2f30,0 0 22px var(--lime);transition:left 1.1s var(--ease)}
+.route{width:100%;height:clamp(120px,22vh,190px);border:1px solid var(--line);border-radius:6px;background:#e9e5d6}
+.route path{fill:none;stroke:var(--lime);stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;stroke-linecap:round}
+.route.go path{animation:draw 2.4s ease-in-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.route circle{fill:#e9e5d6;stroke:var(--gold);stroke-width:2;opacity:0}
+.route.go circle{animation:rise .5s both;animation-delay:calc(var(--k)*.8s)}
+.route text{font:600 12px var(--sans);fill:var(--text);text-anchor:middle;opacity:0}
+.route.go text{animation:rise .5s both;animation-delay:calc(var(--k)*.8s + .1s)}
+
+/* kapanış */
+.road{width:100%;height:clamp(120px,24vh,220px)}
+.road path{fill:none;stroke:var(--gold);stroke-width:2;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2s ease-in-out .5s forwards}
+.road circle{fill:var(--bg);stroke:var(--gold);stroke-width:2;opacity:0;animation:rise .5s both;animation-delay:calc(var(--k)*.75s + .5s)}
+.road circle.now{fill:var(--lime);stroke:var(--lime)}
+.road text{font:500 15px var(--sans);fill:var(--text);text-anchor:middle;opacity:0;animation:rise .6s both;animation-delay:calc(var(--k)*.75s + .7s)}
+.ask{font-family:var(--serif);font-size:clamp(20px,min(2.4vw,4.2vh),36px);line-height:1.2;max-width:900px}
+.ask em{color:var(--lime)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+.two .panel h3{font-family:var(--serif);font-weight:600;font-size:clamp(17px,1.5vw,22px);margin-bottom:6px}
+.two .panel p{font-size:clamp(13.5px,1.1vw,15.5px);line-height:1.45;color:#3f4936}
+
+.term{height:clamp(220px,46vh,400px);border:1px solid #1f2a1a2e;border-radius:6px;background:#fbf9f1;padding:16px;font:clamp(12.5px,1.05vw,15px)/1.65 ui-monospace,Consolas,monospace;color:#25301f;overflow:hidden;word-break:break-word}
+.term div{white-space:pre-wrap;opacity:0;transform:translateY(6px);transition:.45s var(--ease)}
+.term div.lit{opacity:1;transform:none}
+.term .caret{display:inline-block;width:.55em;height:1em;background:var(--lime);vertical-align:-.12em;margin-left:4px}
+.term .p{color:var(--leaf)}.term .c{color:#6a7360}.term .r{color:var(--lime)}.term .w{color:var(--amber)}
+
+.deck-footer{position:relative;z-index:5;height:54px;padding:0 3.5%;display:grid;grid-template-columns:1fr minmax(100px,360px) 1fr;align-items:center;gap:20px;border-top:1px solid var(--line);background:#f5f2e8cc;backdrop-filter:blur(6px)}
+.stage-caption{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage-caption b{color:var(--leaf);font-weight:400}
+.progress{height:2px;background:#1f2a1a1a;border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--leaf));transition:width .6s}
+.pager{display:flex;justify-content:flex-end;align-items:center;gap:14px;font-family:var(--serif)}
+.pager button{width:38px;height:38px;border:1px solid #1f2a1a33;border-radius:50%;font-size:18px;transition:.2s}
+.pager button:hover:not(:disabled){background:#8a6d1f;color:#fff}
+.pager button:disabled{opacity:.3;cursor:default}
+
+#notes{position:fixed;z-index:20;right:0;top:60px;bottom:54px;width:min(420px,92vw);background:#fbf9f1f2;border-left:1px solid #8a6d1f40;padding:28px 26px;overflow:auto;transform:translateX(100%);transition:transform .45s var(--ease)}
+#notes.open{transform:none}
+#notes .l{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+#notes h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:10px 0 14px;line-height:1.2}
+#notes p{font-size:15px;line-height:1.55;color:#3f4936;margin-bottom:12px}
+#notes .x{position:absolute;right:14px;top:10px;font-size:26px;color:#aaa}
+
+@media (max-width:900px){
+  .masthead{height:auto;min-height:52px;padding:8px 16px}
+  .edition,.wordmark span,#present,#motion{display:none}
+  .show{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .chapter-rail{flex-direction:row;border-right:0;border-bottom:1px solid var(--line);padding:4px 8px;overflow-x:auto}
+  .chapter-rail button{min-width:42px;flex:0 0 auto;border-left:0;border-bottom:2px solid transparent;max-height:none}
+  .chapter-rail button span{display:none}
+  .chapter-rail button.active{border-bottom-color:var(--leaf)}
+  body{height:100svh}
+  .scene{grid-template-columns:minmax(0,1fr);overflow-x:hidden;overflow-y:auto;align-content:start;padding:18px 16px 24px;gap:18px}
+  .cards,.cards.c3,.two,.out,.board{grid-template-columns:minmax(0,1fr)}
+  .board{height:auto}
+  .pins{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pipe{grid-template-columns:minmax(0,1fr)}.flowline{display:none}
+  .scan{height:auto}.scan .map{height:240px}
+  .phone{height:520px}
+  .deck-footer{grid-template-columns:1fr auto;height:54px;padding:0 16px}
+  .progress,.stage-caption{display:none}
+}
+@media (min-width:1700px) and (min-height:950px){.scene.wide>.col{zoom:1.3}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001s!important;transition-delay:0s!important}}
+body.still *{animation-play-state:paused!important}
+body.static *{animation-duration:.001s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001s!important;transition-delay:0s!important}
+</style>
+</head>
+<body>
+<canvas id="pollen" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="masthead">
+  <a class="wordmark" href="#kapak" aria-label="Plant Protection Assistant"><b>PLANT<i>PROTECTION</i></b><span> / Assistant</span></a>
+  <div class="edition">Depark Hackaton</div>
+  <div class="head-actions">
+    <button id="motion" aria-pressed="true">Hareketi durdur Ⅱ</button>
+    <button id="notes-toggle" aria-expanded="false" aria-controls="notes">Konuşma notu</button>
+    <button id="present">Tam ekran ↗</button>
+  </div>
+</header>
+
+<div class="show">
+  <nav id="rail" class="chapter-rail" aria-label="Sunum bölümleri"></nav>
+  <main id="stage" tabindex="-1"></main>
+</div>
+
+<aside id="notes" aria-label="Konuşma notu" aria-hidden="true">
+  <button class="x" id="close-notes" aria-label="Kapat">×</button>
+  <span class="l">Konuşma notu</span>
+  <h2 id="n-title"></h2>
+  <div id="n-body"></div>
+</aside>
+
+<footer class="deck-footer">
+  <div class="stage-caption"><b>✦</b> Plant Protection Assistant · Fotoğraftan teşhis, kaynaklara dayalı risk, tek 3B harita</div>
+  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+  <div class="pager">
+    <button id="prev" aria-label="Önceki">←</button>
+    <span id="count">01 / 14</span>
+    <button id="next" aria-label="Sonraki">→</button>
+  </div>
+</footer>
+
+<script>
+'use strict';
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const Q=new URLSearchParams(location.search);
+const FAST=Q.has('static')||matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(Q.has('static'))document.body.classList.add('static');
+const pad=n=>String(n).padStart(2,'0');
+const kicker=t=>`<div class="kicker rise" style="--i:0">${t}</div>`;
+const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+/* durum renkleri, uygulamadaki sağlık renkleriyle aynı sırada */
+const ST={healthy:'#3fa65a',watching:'#e3c53a',treating:'#f0a94a',critical:'#d9552b',unknown:'#94998a'};
+
+/* Sahne bağlamı: sahneden çıkınca tüm zamanlayıcılar temizlenir */
+const ctx={timers:[],
+  later(f,ms){if(FAST)return f();this.timers.push(setTimeout(f,ms))},
+  every(f,ms){if(FAST)return;this.timers.push(setInterval(f,ms))},
+  clear(){this.timers.forEach(t=>{clearTimeout(t);clearInterval(t)});this.timers=[]}
+};
+
+/* Harita parçaları */
+function blob(cx,cy,r,seed,n=64){const R=rng(seed),a=R()*6,b=R()*6,c=R()*6;let d='';for(let i=0;i<=n;i++){const t=i/n*6.2832,q=r*(1+.2*Math.sin(2*t+a)+.12*Math.sin(3*t+b)+.07*Math.sin(5*t+c));d+=(i?'L':'M')+(cx+q*Math.cos(t)).toFixed(1)+' '+(cy+q*.82*Math.sin(t)).toFixed(1)}return d+'Z'}
+const contours=(cx,cy,n,step,seed,cls='contour')=>Array.from({length:n},(_,i)=>`<path class="${cls}" d="${blob(cx,cy,step*(i+1),seed)}"/>`).join('');
+
+/* 3B haritanın katman düzlemleri (300x300) */
+const LAYERS=[
+ ['Arazi','Yükselti, eğim ve bakı (güney yamaç kurur)',()=>contours(150,150,9,18,11,'contour').replace(/class="contour"/g,'fill="none" stroke="#8a6d1f88" stroke-width="1"')],
+ ['Parseller','Rengi içindeki en kötü bitki durumu',()=>`<path d="M70 70 L150 60 L158 130 L78 140Z" fill="#d9552b" fill-opacity=".5" stroke="#8a6d1f"/><path d="M165 150 L240 145 L246 215 L172 222Z" fill="#3fa65a" fill-opacity=".5" stroke="#8a6d1f"/><path d="M80 175 L145 170 L150 235 L88 240Z" fill="#f0a94a" fill-opacity=".5" stroke="#8a6d1f"/>`],
+ ['Bitkiler','Sağlık pinleri ve direkleri, kritik olan nabız atar',()=>{const R=rng(5);let s='';for(let i=0;i<14;i++){const c=['#3fa65a','#3fa65a','#e3c53a','#f0a94a','#d9552b'][Math.floor(R()*5)];s+=`<circle cx="${(70+R()*170).toFixed(0)}" cy="${(70+R()*160).toFixed(0)}" r="5" fill="${c}" stroke="#e9e5d6" stroke-width="1.5"/>`}return s}],
+ ['İstilacı türler','GBIF gözlemleri, yıla göre yükseklik ve renk',()=>{const R=rng(7);let s='';for(let i=0;i<22;i++)s+=`<circle cx="${(30+R()*240).toFixed(0)}" cy="${(30+R()*240).toFixed(0)}" r="3.5" fill="${['#9fc08a','#8a6d1f','#f0a94a','#d9552b'][Math.floor(R()*4)]}"/>`;return s}],
+ ['Yangın','Yanmış alanlar ve yangın hava indeksi (GWIS)',()=>[[225,70,40,4,'#f0a94a'],[232,215,48,5,'#d9552b']].map(a=>`<path d="${blob(a[0],a[1],a[2],a[3])}" fill="${a[4]}" fill-opacity=".55"/>`).join('')+`<circle class="flick" cx="236" cy="92" r="6" fill="#f0a94a"/>`],
+ ['Arazi örtüsü','CORINE sınıfları: orman, mera, tarım, yerleşim',()=>[[80,90,60,3,'#3b8f4e'],[210,80,50,4,'#c9b458'],[220,215,66,5,'#7a9a4a'],[85,225,50,6,'#a08a9a']].map(a=>`<path d="${blob(a[0],a[1],a[2],a[3])}" fill="${a[4]}" fill-opacity=".5"/>`).join('')]
+];
+
+const slides=[
+/* 1 */
+{id:'kapak',nav:'Giriş',title:'Plant Protection Assistant',
+ note:'Merhaba. Projemizin adı Plant Protection Assistant. Bir bitkinin fotoğrafını yüklüyorsunuz, uygulama neyin sorun olduğunu söylüyor, ne kadar ciddi olduğunu değerlendiriyor ve çiftliğinizdeki her şeyi tek bir 3B haritada gösteriyor.',
+ html:()=>`<div class="col">
+   <div class="stamp rise" style="--i:0">PLANT PROTECTION ASSISTANT</div>
+   <h1 class="display big rise" style="--i:1">Bitkin neden hasta? <span class="payoff">Bir fotoğraf yeter.</span></h1>
+   <p class="lead rise" style="--i:2">Fotoğraftan teşhis, kaynaklara dayalı risk değerlendirmesi ve çiftliğin için tek bir 3B harita.</p>
+   <p class="byline rise" style="--i:3">Yağız Erdem · Depark Hackaton · 2026</p>
+ </div>
+ <div class="col rise phonewrap" style="--i:2"><div class="phone"><div class="ps">
+   <h4>Yeni analiz</h4>
+   <div class="view" id="vw">
+     <svg viewBox="0 0 200 260" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+       <path d="M100 30 C38 78 30 160 100 232 C170 160 162 78 100 30Z" fill="#3d7a37" stroke="#7fb86a" stroke-width="2"/>
+       <path d="M100 40 L100 226 M100 90 L64 120 M100 120 L140 148 M100 150 L66 176 M100 100 L138 124" stroke="#a9d48f" stroke-width="1.6" fill="none" opacity=".7"/>
+       <circle class="spot" cx="72" cy="112" r="9" fill="#7a4a24"/><circle class="spot" cx="128" cy="150" r="12" fill="#6b3f1f"/><circle class="spot" cx="92" cy="182" r="7" fill="#7a4a24"/>
+     </svg>
+     <div class="beam" id="bm"></div><div class="corner"></div>
+   </div>
+   <ul class="res" id="rs">
+     <li><b>Domates</b> · Solanum lycopersicum</li>
+     <li class="warn">Şüphe: <b>mildiyö</b> (mantar)</li>
+     <li class="warn">Önem: <b>yüksek</b> · acil</li>
+   </ul>
+ </div></div></div>`,
+ play(el){
+   ctx.later(()=>$('#bm',el).classList.add('go'),500);
+   ctx.later(()=>$$('.spot',el).forEach((s,i)=>ctx.later(()=>s.classList.add('on'),i*350)),1500);
+   $$('#rs li',el).forEach((l,i)=>ctx.later(()=>l.classList.add('lit'),2800+i*450));
+ }},
+
+/* 2 */
+{id:'sorun',nav:'Sorun',title:'Teşhis geç kalınca ürün de gider',
+ note:'Çiftçinin ve bahçe sahibinin karşılaştığı üç sorun var. Belirtiler birbirine benziyor, hastalığı ve zararlıyı ayırt etmek uzmanlık istiyor. İstilacı türler ve zararlılar komşu parsellere hızla geçiyor. Üstelik hava, yangın, arazi örtüsü ve bitki kayıtları ayrı yerlerde duruyor. Biz bunları tek uygulamada topluyoruz.',
+ html:()=>`<div class="col">
+   ${kicker('Neden?')}
+   <h2 class="display rise" style="--i:1">Teşhis geç kalınca <span class="payoff">ürün de</span> gider</h2>
+   <div class="cards c3" style="margin-top:8px">
+     <div class="card" style="--k:0"><h3>Zor teşhis</h3><p>Belirtiler birbirine benzer. Hastalığı, zararlıyı ve beslenme eksikliğini ayırt etmek uzmanlık ister.</p><span class="tag">Bir fotoğraf ve bir uzman</span></div>
+     <div class="card" style="--k:1"><h3>Hızlı yayılım</h3><p>İstilacı türler ve zararlılar komşu parsellere kısa sürede geçer. Geç kalınan her gün kaybı artırır.</p><span class="tag">Konum ve zaman önemli</span></div>
+     <div class="card" style="--k:2"><h3>Dağınık bilgi</h3><p>Hava, yangın, arazi örtüsü ve bitki kayıtları ayrı yerlerde durur. Karar vermek için hepsini birleştirmek gerekir.</p><span class="tag">Hepsi tek uygulamada</span></div>
+   </div>
+ </div>`},
+
+/* 3 */
+{id:'analiz',nav:'Analiz',title:'Fotoğraftan teşhis ve risk değerlendirmesi',
+ note:'Kullanıcı bir fotoğraf yüklüyor. JPEG, PNG, WebP ve HEIC desteklenir, en fazla on megabayt. Gemini bitkinin türünü, belirtilerini, şüpheli zararlı ve hastalıkları ile istilacı tehditleri çıkarıyor. İkinci aşamada aynı teşhisten bir risk değerlendirmesi üretiyor: önem derecesi, aciliyet, yayılma riski, uygulanacak adımlar, izleme ve yetkililere bildirim gerekip gerekmediği. Çıktı yapılandırılmış JSON, dolayısıyla uygulamanın geri kalanı bunu doğrudan kullanabilir.',
+ html:()=>`<div class="col">
+   ${kicker('Ne yapıyoruz?')}
+   <h2 class="display rise" style="--i:1">Fotoğrafı yükle, <span class="payoff">teşhisi ve planı</span> al</h2>
+   <ol class="steps rise" style="--i:2">
+     <li><i>1</i><div><b>Teşhis</b><span>Tür, belirtiler, şüpheli zararlı ve hastalıklar, istilacı tehditler.</span></div></li>
+     <li><i>2</i><div><b>Risk değerlendirmesi</b><span>Önem, aciliyet, yayılma riski, bildirim gerekliliği.</span></div></li>
+     <li><i>3</i><div><b>Eylem planı</b><span>Zamanlı adımlar ve izleme önerileri, kayda ve göreve dönüşür.</span></div></li>
+   </ol>
+   <button class="replay rise" style="--i:3" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="term" id="tm">
+   <div><span class="p">POST</span> /api/plan-analysis <span class="c">· görsel ≤ 10 MB, giriş zorunlu</span></div>
+   <div><span class="c">tür</span>     <span class="r">Solanum lycopersicum</span> · güven 0,94</div>
+   <div><span class="c">belirti</span>  yaprakta sarı lekeler, alt yüzde tüylenme</div>
+   <div><span class="c">şüphe</span>    <span class="w">Phytophthora infestans</span> (mantar)</div>
+   <div><span class="c">önem</span>     <span class="w">high</span> · aciliyet <span class="w">within_days</span></div>
+   <div><span class="c">plan</span>     1) hasta yaprakları topla</div>
+   <div><span class="c">     </span>     2) uygun fungisit uygula</div>
+   <div><span class="c">     </span>     3) 7 gün sonra tekrar kontrol et</div>
+   <div><span class="c">bildirim</span> <span class="r">gerekmiyor</span><span class="caret"></span></div>
+ </div><p class="note" style="margin-top:8px">Örnek çıktı, alanlar gerçek yanıt şemasından.</p></div>`,
+ play(el){
+   const st=$$('.steps li',el);
+   $$('#tm div',el).forEach((d,i)=>ctx.later(()=>d.classList.add('lit'),400+i*430));
+   st.forEach((l,i)=>ctx.later(()=>l.classList.add('lit'),700+i*1400));
+ }},
+
+/* 4 */
+{id:'rag',nav:'Bilgi',title:'Kaynaklara dayalı değerlendirme (RAG)',
+ note:'İkinci mod bilgi tabanlı analiz. Teşhisten bir arama sorgusu üretiyoruz, PDF bilgi tabanından ilgili sayfaları buluyoruz ve risk değerlendirmesini bu sayfalara dayandırıyoruz. Kaynaklar EPPO bilgi formları, Tarım ve Orman Bakanlığı talimatları ve FAO rehberleri gibi belgeler. Yaklaşımımız özet tabanlı: sayfanın özeti aranıyor, ham sayfa metni dönüyor. Servis ayrı bir Flask uygulaması, Docker ile çalışıyor, vektörler Gemini gömmeleriyle üretilip Chroma’da saklanıyor. Dürüst olalım: PDF’lerin gömülmesi isteğe bağlı bir adım, otomatik çalışmıyor ve bu mod şu an yalnızca geliştirme ortamında açık.',
+ html:()=>`<div class="col" style="grid-column:1/-1">
+   ${kicker('Bilgi tabanı')}
+   <h2 class="display rise" style="--i:1">Yapay zekâ tahmin etmesin, <span class="payoff">kaynağa baksın</span></h2>
+   <div class="pipe rise" style="--i:2">
+     <div class="stackc"><div class="colhead">Kaynaklar</div>
+       <div class="tile" data-t="0">EPPO bilgi formları</div>
+       <div class="tile" data-t="1">Tarım ve Orman Bakanlığı talimatları</div>
+       <div class="tile" data-t="2">FAO rehberleri</div></div>
+     <div class="flowline"><i></i><i style="--d:-.7s"></i></div>
+     <div class="hub"><svg viewBox="0 0 64 64" fill="none" stroke="#4f8f2f" stroke-width="2.4" aria-hidden="true"><ellipse cx="32" cy="14" rx="20" ry="8"/><path d="M12 14v18c0 4.4 9 8 20 8s20-3.6 20-8V14M12 32v18c0 4.4 9 8 20 8s20-3.6 20-8V32"/></svg><b>RAG servisi</b><span>Flask · Gemini gömme · Chroma</span></div>
+     <div class="flowline"><i style="--d:-.3s"></i><i style="--d:-1s"></i></div>
+     <div class="stackc"><div class="colhead">Sonuç</div>
+       <div class="tile res2" data-t="3">Teşhisten arama sorgusu</div>
+       <div class="tile res2" data-t="4">Özet aranır, ham sayfa döner</div>
+       <div class="tile res2" data-t="5">Dayanaklı risk değerlendirmesi</div></div>
+   </div>
+ </div>`,
+ play(el){$$('.tile',el).forEach((t,i)=>ctx.later(()=>t.classList.add('lit'),600+i*520))}},
+
+/* 5 */
+{id:'ciftlik',nav:'Çiftlik',title:'Çiftliğim: parseller, bitkiler, görevler',
+ note:'Analiz tek seferlik bir sonuç olarak kalmıyor. Kullanıcı bitkilerini ve parsellerini kaydediyor, analizler bitkinin geçmişine ekleniyor, bakım işleri görev olarak takip ediliyor. Bitki genel bakışında rozetler, arama ve filtreler var, filtreler adres çubuğunda tutuluyor. Görev panosu sürükle-bırak çalışıyor: yapılacak, sürüyor, bitti. Silme işlemi geri alınabiliyor.',
+ html:()=>`<div class="col">
+   ${kicker('Çiftlik yönetimi')}
+   <h2 class="display rise" style="--i:1">Analiz bir kayda, <span class="payoff">kayıt bir göreve</span> dönüşür</h2>
+   <ol class="steps rise" style="--i:2">
+     <li><i>1</i><div><b>Parseller ve bitkiler</b><span>Her bitkinin fotoğrafı, konumu, etiketleri ve analiz geçmişi.</span></div></li>
+     <li><i>2</i><div><b>Genel bakış</b><span>Sağlık rozetleri, arama ve filtre, adres çubuğunda saklanan görünüm.</span></div></li>
+     <li><i>3</i><div><b>Görev panosu</b><span>Sürükle-bırak, tekrarlayan işler, geri alınabilir silme.</span></div></li>
+   </ol>
+   <button class="replay rise" style="--i:3" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="board">
+   <div class="bcol"><h4>Yapılacak <em id="c0">3</em></h4><div id="k0" style="display:flex;flex-direction:column;gap:8px">
+     <div class="bcard" id="hero"><span class="dot" style="background:#d9552b"></span>İlaçla<small>Domates · bugün</small></div>
+     <div class="bcard"><span class="dot" style="background:#e3c53a"></span>Sula<small>Biber · yarın</small></div>
+     <div class="bcard"><span class="dot" style="background:#3fa65a"></span>Buda<small>Zeytin · haftalık</small></div></div></div>
+   <div class="bcol"><h4>Sürüyor <em id="c1">1</em></h4><div id="k1" style="display:flex;flex-direction:column;gap:8px">
+     <div class="bcard"><span class="dot" style="background:#f0a94a"></span>Gübrele<small>Limon · bugün</small></div></div></div>
+   <div class="bcol"><h4>Bitti <em id="c2">2</em></h4><div id="k2" style="display:flex;flex-direction:column;gap:8px">
+     <div class="bcard"><span class="dot" style="background:#3fa65a"></span>Kontrol et<small>Nane</small></div>
+     <div class="bcard"><span class="dot" style="background:#3fa65a"></span>Hasat et<small>İncir</small></div></div></div>
+ </div></div>`,
+ play(el){
+   const st=$$('.steps li',el),h=$('#hero',el);
+   const mv=(to,from)=>{h.classList.remove('hero');void h.offsetWidth;$('#k'+to,el).prepend(h);h.classList.add('hero');
+     [0,1,2].forEach(i=>$('#c'+i,el).textContent=$('#k'+i,el).children.length)};
+   st.forEach((l,i)=>ctx.later(()=>l.classList.add('lit'),500+i*1100));
+   ctx.later(()=>mv(1),2200);ctx.later(()=>mv(2),4200);
+ }},
+
+/* 6 */
+{id:'harita2d',nav:'2B Harita',title:'Haritaya dokun, çevrenin bitki örtüsünü öğren',
+ note:'İki boyutlu haritada bir noktaya tıklıyorsunuz, o noktayı işaretliyoruz ve çevresinin arazi örtüsünü analiz ediyoruz: orman, tarım, mera ve yerleşim oranları. Ayrıca GWIS yangın hava indeksi gibi katmanları haritanın üzerine açabiliyorsunuz. Gösterilen yüzdeler örnektir.',
+ html:()=>`<div class="col">
+   ${kicker('2B risk haritası')}
+   <h2 class="display rise" style="--i:1">Bir tıkla <span class="payoff">çevreyi oku</span></h2>
+   <ol class="steps rise" style="--i:2">
+     <li><i>1</i><div><b>Nokta seç</b><span>Leaflet haritasında işaretle.</span></div></li>
+     <li><i>2</i><div><b>Çevreyi analiz et</b><span>Noktayı çevreleyen dairenin arazi örtüsü sınıfları.</span></div></li>
+     <li><i>3</i><div><b>Katman ekle</b><span>GWIS yangın hava indeksi ve diğer WMS katmanları.</span></div></li>
+   </ol>
+   <button class="replay rise" style="--i:3" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="scan">
+   <div class="map">
+     <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${contours(190,120,8,30,21)}${contours(470,260,7,30,22)}
+       <circle id="rc" cx="330" cy="170" r="0" fill="#4f8f2f22" stroke="#4f8f2f" stroke-width="1.5" style="transition:r 1s var(--ease)"/></svg>
+     <div class="ping" id="pg" style="left:55%;top:50%"></div>
+   </div>
+   <div class="panel"><span class="lab">Çevrenin arazi örtüsü · örnek</span>
+     <div style="display:flex;flex-direction:column;gap:7px;margin-top:8px">
+       <div class="pbar"><span>Orman</span><div class="t"><i data-w="41" style="background:#3b8f4e"></i></div><b>%41</b></div>
+       <div class="pbar"><span>Tarım</span><div class="t"><i data-w="33" style="background:#c9b458"></i></div><b>%33</b></div>
+       <div class="pbar"><span>Çalılık</span><div class="t"><i data-w="14" style="background:#7a9a4a"></i></div><b>%14</b></div>
+       <div class="pbar"><span>Yerleşim</span><div class="t"><i data-w="12" style="background:#a08a9a"></i></div><b>%12</b></div>
+     </div></div>
+ </div></div>`,
+ play(el){
+   const st=$$('.steps li',el);
+   ctx.later(()=>{$('#pg',el).classList.add('on');st[0].classList.add('lit')},500);
+   ctx.later(()=>{$('#rc',el).setAttribute('r','120');st[1].classList.add('lit')},1300);
+   $$('.pbar',el).forEach((b,i)=>ctx.later(()=>{b.classList.add('lit');$('i',b).style.width=$('i',b).dataset.w*2+'%'},1900+i*350));
+   ctx.later(()=>st[2].classList.add('lit'),3600);
+ }},
+
+/* 7 */
+{id:'harita3d',nav:'3B Harita',title:'Tek 3B haritada altı katman',
+ note:'Asıl öne çıkan parça üç boyutlu harita. Eskiden yalnızca istilacı türleri gösteren sayfayı, çiftliğe dair her şeyi gösteren tek bir haritaya çevirdik. Arazi yüksekliği, parseller, bitki pinleri, GBIF istilacı tür gözlemleri, GWIS yangın katmanları ve CORINE arazi örtüsü aynı küre üzerinde ve her biri tek tıkla açılıp kapanıyor. Parsele tıklayınca kamera oraya uçuyor ve yüksekliğini, eğimini ve bakısını yorumuyla birlikte görüyorsunuz. Çizim temsilîdir.',
+ html:()=>`<div class="col">
+   ${kicker('3B harita · CesiumJS')}
+   <h2 class="display rise" style="--i:1">Çiftliğin her şeyi <span class="payoff">tek haritada</span></h2>
+   <ol class="steps rise" style="--i:2">${LAYERS.map((l,i)=>`<li><i>${i+1}</i><div><b>${l[0]}</b><span>${l[1]}</span></div></li>`).join('')}</ol>
+   <button class="replay rise" style="--i:3" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="iso"><div class="stack" id="stk">
+   ${LAYERS.map((l,i)=>`<div class="plane" style="--k:${i}"><svg viewBox="0 0 300 300" aria-hidden="true">${l[2]()}</svg></div>`).join('')}
+   </div>
+   <svg class="over" id="ov" viewBox="0 0 300 300" aria-hidden="true">
+     <path d="M70 70 L150 60 L158 130 L78 140Z" fill="#d9552b55" stroke="#8a6d1f" stroke-width="2"/>
+     <text class="lbl" x="114" y="104" text-anchor="middle">Üst Tarla</text>
+     <text class="lbl" x="114" y="118" text-anchor="middle">eğim 2°, güney</text>
+     <text x="296" y="294" text-anchor="end" font-size="8.5" fill="#6a7360">Temsilî görünüm</text>
+   </svg>
+ </div></div>`,
+ play(el){
+   const pl=$$('.plane',el),st=$$('.steps li',el);
+   pl.forEach((p,i)=>ctx.later(()=>{p.classList.add('in');st[i].classList.add('lit')},500+i*800));
+   ctx.later(()=>$('#stk',el).classList.add('flat'),5800);
+   ctx.later(()=>$('#ov',el).classList.add('on'),7000);
+ }},
+
+/* 8 */
+{id:'yukseklik',nav:'Yükseklik',title:'Sorun yoğunluğu yükseklikle görünür',
+ note:'Parselleri üç boyutlu prizmalara çevirebiliyoruz. Prizmanın yüksekliği sorun yoğunluğuna göre hesaplanıyor: kritik bitkiler üç, tedavideki bitkiler iki, izlenenler bir, açık görevler yarım puan ve toplam yirmi ile dört yüz metre arasına ölçekleniyor. Rengi ise parselin içindeki en kötü bitki durumu belirliyor. Böylece tek bakışta hangi parsele önce gidileceği anlaşılıyor. Çubuk yükseklikleri formülün örnek bir uygulamasıdır.',
+ html:()=>`<div class="col">
+   ${kicker('Parsel yüksekliği')}
+   <h2 class="display rise" style="--i:1">Önce <span class="payoff">en yüksek</span> parsele git</h2>
+   <p class="lead rise" style="--i:2">Prizmanın yüksekliği sorun yoğunluğudur, rengi parseldeki en kötü bitki durumudur.</p>
+   <div class="formula rise" style="--i:3"><span><b>Kritik</b> ×3</span><span><b>Tedavide</b> ×2</span><span><b>İzlenen</b> ×1</span><span><b>Açık görev</b> ×0,5</span><span>→ <b>20–400 m</b></span></div>
+   <button class="replay rise" style="--i:4" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="bars" id="br">
+   <div class="bar" style="--h:84%;--c:${ST.critical};--k:0"><span class="v">208 m</span><span class="n">Üst Tarla</span></div>
+   <div class="bar" style="--h:52%;--c:${ST.treating};--k:1"><span class="v">130 m</span><span class="n">Zeytinlik</span></div>
+   <div class="bar" style="--h:30%;--c:${ST.watching};--k:2"><span class="v">75 m</span><span class="n">Sera</span></div>
+   <div class="bar" style="--h:14%;--c:${ST.healthy};--k:3"><span class="v">35 m</span><span class="n">Alt Bahçe</span></div>
+ </div><p class="note" style="margin-top:36px">Örnek parseller ve değerler.</p></div>`,
+ play(el){ctx.later(()=>$$('.bar',el).forEach(b=>b.classList.add('up')),400)}},
+
+/* 9 */
+{id:'zaman',nav:'Zaman',title:'Zamanı geri sar, sahayı gez',
+ note:'Zaman çizelgesi Cesium’un kendi saat bileşenini kullanıyor. Bitki pinlerinin rengi saate bağlı: oynat dediğinizde bitkilerin sağlığının analiz kayıtlarına göre nasıl değiştiğini izliyorsunuz, bir bitki yeşilden turuncuya ve kırmızıya dönebiliyor. Saha turu ise bugün görevi olan bitkileri en yakın komşu sırasıyla bir rotada birleştiriyor ve kamera bu rota boyunca uçuyor. Gösterilen tarihler ve durumlar örnektir.',
+ html:()=>`<div class="col">
+   ${kicker('Zaman ve saha turu')}
+   <h2 class="display rise" style="--i:1">Hastalığın <span class="payoff">hikâyesini</span> oynat</h2>
+   <p class="lead rise" style="--i:2">Pinlerin rengi saatle değişir. Bugün görevi olan bitkiler en yakın komşu sırasıyla bir rotaya dizilir.</p>
+   <button class="replay rise" style="--i:3" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="tlbox">
+   <div><span class="lab">Zaman çizelgesi</span><div class="dateval" id="dv">20 gün önce</div><div class="track"><div class="thumb" id="th"></div></div></div>
+   <div class="pins" id="pn">
+     <div class="pin"><i></i>Domates</div><div class="pin"><i></i>Biber</div><div class="pin"><i></i>Zeytin</div><div class="pin"><i></i>Nane</div>
+   </div>
+   <svg class="route" id="rt" viewBox="0 0 600 170" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+     <path pathLength="1" d="M60 120 C150 40 230 150 310 80 S470 30 540 90"/>
+     <circle style="--k:0" cx="60" cy="120" r="13"/><circle style="--k:1" cx="310" cy="80" r="13"/><circle style="--k:2" cx="540" cy="90" r="13"/>
+     <text style="--k:0" x="60" y="125">1</text><text style="--k:1" x="310" y="85">2</text><text style="--k:2" x="540" y="95">3</text>
+   </svg>
+ </div></div>`,
+ play(el){
+   const T=[['20 gün önce',0,['unknown','unknown','unknown','unknown']],['12 gün önce',.25,['healthy','unknown','watching','healthy']],['5 gün önce',.55,['treating','treating','watching','healthy']],['3 gün önce',.75,['critical','treating','watching','healthy']],['Bugün',1,['critical','treating','healthy','healthy']]];
+   const ic=$$('#pn i',el);
+   const set=t=>{const d=$('#dv',el);d.textContent=t[0];d.classList.remove('flip');void d.offsetWidth;d.classList.add('flip');$('#th',el).style.left=t[1]*100+'%';
+     ic.forEach((c,i)=>{c.style.background=ST[t[2][i]];c.classList.toggle('pulse',t[2][i]==='critical')})};
+   set(T[0]);T.forEach((t,i)=>{if(i)ctx.later(()=>set(t),700+i*1100)});
+   ctx.later(()=>$('#rt',el).classList.add('go'),800);
+ }},
+
+/* 10 */
+{id:'ciz',nav:'Çizim',title:'Çiz, anında analiz et, parsel olarak kaydet',
+ note:'Çizim aracıyla küre üzerinde köşeleri tıklıyorsunuz, son köşeye çift tıklayınca alan hemen analiz ediliyor: alan ve çevre, rakım aralığı, eğim, bakı ve çevrenin CORINE arazi örtüsü. Eğim ve bakıyı arazi modelinin küçük hücreleri bir tarlayı çözemediği için parselin çevresindeki üç yüz metrelik pencereden okuyoruz. İsterseniz sonucu bir ad vererek parsel olarak kaydediyorsunuz. Değerler örnektir.',
+ html:()=>`<div class="col">
+   ${kicker('Çizim aracı')}
+   <h2 class="display rise" style="--i:1">Çiz, <span class="payoff">hemen öğren</span></h2>
+   <ol class="steps rise" style="--i:2">
+     <li><i>1</i><div><b>Köşeleri tıkla</b><span>Çift tık bitirir, Backspace geri alır, Esc iptal eder.</span></div></li>
+     <li><i>2</i><div><b>Anında analiz</b><span>Alan, rakım, eğim, bakı ve arazi örtüsü.</span></div></li>
+     <li><i>3</i><div><b>Parsel olarak kaydet</b><span>Ad ver, çiftliğine eklensin.</span></div></li>
+   </ol>
+   <button class="replay rise" style="--i:3" data-replay>↻ Yeniden oynat</button>
+ </div>
+ <div class="col rise" style="--i:2"><div class="scan">
+   <div class="map">
+     <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${contours(300,170,9,32,31)}
+       <path id="dp" class="parcel" pathLength="1" d="M230 90 L380 80 L410 190 L330 250 L225 200 Z"/>
+       ${[[230,90],[380,80],[410,190],[330,250],[225,200]].map((p,i)=>`<circle class="cn" data-i="${i}" cx="${p[0]}" cy="${p[1]}" r="6" fill="#fff" stroke="#4f8f2f" stroke-width="3" opacity="0"/>`).join('')}
+     </svg>
+   </div>
+   <div class="out">
+     <div class="panel"><span class="lab">Çizilen alan · örnek</span><ul class="kv" id="kv">
+       <li><span>Alan</span><b>3.498 m²</b></li><li><span>Rakım</span><b>300–304 m</b></li><li><span>Eğim</span><b>2,1°</b></li><li><span>Bakı</span><b>Güney</b></li></ul></div>
+     <div class="panel"><span class="lab">Yorum</span><ul class="kv" id="kv2"><li style="display:block"><span>Güneye bakıyor: daha çok güneş alır, toprak çabuk kurur, kuraklık stresi riski yüksek.</span></li></ul></div>
+   </div>
+ </div></div>`,
+ play(el){
+   const st=$$('.steps li',el);
+   $$('.cn',el).forEach((c,i)=>ctx.later(()=>{c.setAttribute('opacity','1');if(!i)st[0].classList.add('lit')},500+i*450));
+   ctx.later(()=>{$('#dp',el).classList.add('drawn')},2700);
+   ctx.later(()=>{$('#dp',el).classList.add('hot');st[1].classList.add('lit')},3900);
+   $$('#kv li',el).forEach((l,i)=>ctx.later(()=>l.classList.add('lit'),4000+i*350));
+   ctx.later(()=>{$('#kv2 li',el).classList.add('lit');st[2].classList.add('lit')},5600);
+ }},
+
+/* 11 */
+{id:'mimari',nav:'Mimari',title:'Mimari: web, API ve veri kaynakları',
+ note:'Proje bir npm workspaces monoreposu. Web uygulaması React, Vite, Tailwind ve shadcn arayüz bileşenleriyle yazıldı, iki boyutlu harita Leaflet, üç boyutlu harita CesiumJS ile. Arka uç Express ve Mongoose, veriler MongoDB’de. Görsel analiz Gemini ile yapılıyor, bilgi tabanı ayrı bir Flask servisi. Harita katmanları için GBIF, GWIS, CORINE ve Open-Meteo gibi açık veri kaynaklarını kullanıyoruz. Ortak türler ve doğrulama şemaları paylaşılan paketlerde duruyor.',
+ html:()=>`<div class="col" style="grid-column:1/-1">
+   ${kicker('Mimari')}
+   <h2 class="display rise" style="--i:1">Tek repo, <span class="payoff">net katmanlar</span></h2>
+   <div class="pipe rise" style="--i:2">
+     <div class="stackc"><div class="colhead">Web</div>
+       <div class="tile" data-t="0">React · Vite · Tailwind<small>shadcn/ui bileşenleri</small></div>
+       <div class="tile" data-t="1">CesiumJS 3B harita<small>katmanlar, çizim, zaman, tur</small></div>
+       <div class="tile" data-t="2">Leaflet 2B harita<small>GWIS katmanları, bitki örtüsü</small></div></div>
+     <div class="flowline"><i></i><i style="--d:-.7s"></i></div>
+     <div class="hub"><svg viewBox="0 0 64 64" fill="none" stroke="#4f8f2f" stroke-width="2.4" aria-hidden="true"><rect x="8" y="12" width="48" height="14" rx="3"/><rect x="8" y="36" width="48" height="14" rx="3"/><path d="M16 19h.1M16 43h.1M24 19h20M24 43h20"/></svg><b>Express API</b><span>Mongoose · Zod · JWT · Swagger</span></div>
+     <div class="flowline"><i style="--d:-.3s"></i><i style="--d:-1s"></i></div>
+     <div class="stackc"><div class="colhead">Veri ve servisler</div>
+       <div class="tile res2" data-t="3">MongoDB<small>kullanıcı, parsel, bitki, görev, analiz</small></div>
+       <div class="tile res2" data-t="4">Gemini ve RAG servisi<small>görsel analiz, bilgi tabanı</small></div>
+       <div class="tile res2" data-t="5">Açık veri<small>GBIF · GWIS · CORINE · Open-Meteo</small></div></div>
+   </div>
+ </div>`,
+ play(el){$$('.tile',el).forEach((t,i)=>ctx.later(()=>t.classList.add('lit'),600+i*480))}},
+
+/* 12 */
+{id:'kalite',nav:'Güven',title:'Güvenlik, doğrulama ve işletme',
+ note:'Kimlik doğrulamada erişim ve yenileme jetonları var, yenileme jetonları her kullanımda döndürülüyor ve aynı jetonun yeniden kullanımı tespit edilirse tüm zincir iptal ediliyor. Doğrulama şemaları ve veri aktarım türleri paylaşılan paketlerde duruyor, böylece web ve arka uç aynı sözleşmeye uyuyor. Swagger arayüzü ve ayrı bir Docusaurus dokümantasyon sitesi var. Yerelde Docker Compose, canlıda Railway için yapılandırma yazdık, ayrıca geliştirme için sahte veri üreten bir seeder var.',
+ html:()=>`<div class="col" style="grid-column:1/-1">
+   ${kicker('Güven ve işletme')}
+   <h2 class="display rise" style="--i:1">Hackathon projesi, <span class="payoff">ürün disipliniyle</span></h2>
+   <div class="cards" style="margin-top:8px">
+     <div class="card" style="--k:0"><h3>Kimlik</h3><p>Erişim ve yenileme jetonları. Yenileme jetonu her kullanımda döner, yeniden kullanım tespit edilirse zincir iptal edilir.</p><span class="tag">JWT · rotasyon</span></div>
+     <div class="card" style="--k:1"><h3>Ortak sözleşme</h3><p>Zod şemaları ve DTO türleri paylaşılan paketlerde. Web ve API aynı kurala uyar.</p><span class="tag">shared · validators · dto</span></div>
+     <div class="card" style="--k:2"><h3>Dokümantasyon</h3><p>API için Swagger arayüzü, proje için ayrı bir Docusaurus sitesi: algoritmalar, mimari, RAG.</p><span class="tag">/api-docs · web-docs</span></div>
+     <div class="card" style="--k:3"><h3>İşletme</h3><p>Docker Compose, Railway yapılandırması, sahte veri üreten seeder ve CI iş akışı.</p><span class="tag">compose · railway · seeder</span></div>
+   </div>
+ </div>`},
+
+/* 13 */
+{id:'kapanis',nav:'Kapanış',title:'Neredeyiz, sırada ne var',
+ note:'Dürüst bir durum özeti: üç boyutlu harita gerçek bir WebGL tarayıcıda elli dört etkileşim kontrolünden geçti. Parsel renkleri, yükseklik formülü, nabız animasyonu, zaman çizelgesi, çizim aracı ve kayıt akışı dahil. Henüz denemediğimiz kısım, ücretsiz bir Cesium ion anahtarı gerektiren dünya arazisi, OSM binaları ve Google fotogerçekçi katmanı. Kod bunlar için hazır ve anahtar yoksa arayüz bunu söylüyor. Sırada canlıya alma ve bilgi tabanlı analizi canlıda da açmak var.',
+ html:()=>`<div class="col" style="grid-column:1/-1">
+   ${kicker('Kapanış')}
+   <h2 class="display rise" style="--i:1">Çalışan bir çekirdek, <span class="payoff">net bir yol</span></h2>
+   <svg class="road" viewBox="0 0 1000 170" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+     <path pathLength="1" d="M70 70 C260 20 330 120 500 70 S760 20 930 70"/>
+     <circle class="now" style="--k:0" cx="70" cy="70" r="10"/><circle style="--k:1" cx="500" cy="70" r="10"/><circle style="--k:2" cx="930" cy="70" r="10"/>
+     <text style="--k:0" x="110" y="125">Bugün: analiz, çiftlik, 3B harita</text><text style="--k:1" x="500" y="125">Cesium ion: 3B arazi ve binalar</text><text style="--k:2" x="850" y="125">Canlıya alma</text>
+   </svg>
+   <div class="two rise" style="--i:3">
+     <div class="panel"><h3>Doğrulandı</h3><p>3B harita gerçek WebGL tarayıcıda 54 etkileşim kontrolünden geçti: renkler, yükseklik formülü, zaman çizelgesi, çizim ve kayıt.</p></div>
+     <div class="panel"><h3>Henüz denenmedi</h3><p>Cesium ion anahtarı isteyen dünya arazisi ve 3B bina katmanları. Anahtar yoksa arayüz bunu açıkça söyler.</p></div>
+   </div>
+ </div>`},
+
+/* 14 */
+{id:'soru',nav:'Soru-Cevap',title:'Soru-Cevap',
+ note:'Teşekkür ederiz. Sorularınızı alabiliriz.',
+ html:()=>`<div class="col">
+   ${kicker('Teşekkürler')}
+   <h2 class="display big rise" style="--i:1">Soru-<span class="payoff">Cevap</span></h2>
+   <p class="lead rise" style="--i:2">Kullandığımız teknolojiler ve açık veri kaynakları:</p>
+   <div class="chips rise" style="--i:3">${['React','Vite','Tailwind','shadcn/ui','CesiumJS','Leaflet','Express','MongoDB','Zod','Gemini','Flask','Chroma','Docker','Railway','GBIF','GWIS','CORINE','Open-Meteo','OpenStreetMap'].map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+   <p class="byline rise" style="--i:4;margin-top:18px">Yağız Erdem · github.com/yagizerdem/DeuHackaton</p>
+ </div>
+ <div class="col rise" style="--i:2;align-items:center;text-align:center">
+   <svg viewBox="0 0 200 260" style="width:min(26vw,44vh);max-width:100%" aria-hidden="true">
+     <path d="M100 30 C38 78 30 160 100 232 C170 160 162 78 100 30Z" fill="#3d7a37" stroke="#4f8f2f" stroke-width="2"/>
+     <path d="M100 40 L100 226 M100 90 L64 120 M100 120 L140 148 M100 150 L66 176 M100 100 L138 124" stroke="#4f8f2f" stroke-width="1.6" fill="none" opacity=".7"/>
+   </svg>
+ </div>`,
+ play(el){}}
+];
+
+const stage=$('#stage'),rail=$('#rail');let cur=-1;
+slides.forEach((s,i)=>{
+  const sec=document.createElement('section');
+  sec.className='scene'+(/sorun|rag|mimari|kalite|kapanis/.test(s.id)?' wide':'');sec.id='s-'+s.id;sec.setAttribute('aria-label',s.title);stage.append(sec);s.el=sec;
+  const b=document.createElement('button');b.innerHTML=`${pad(i+1)}<span>${s.nav}</span>`;b.title=s.title;b.onclick=()=>go(i);rail.append(b);s.btn=b;
+});
+function mount(s){ctx.clear();s.el.innerHTML=s.html();s.el.classList.remove('on');void s.el.offsetWidth;s.el.classList.add('on');s.play&&s.play(s.el)}
+function go(n,fromHash){
+  n=Math.max(0,Math.min(slides.length-1,n));if(n===cur)return;
+  const back=n<cur;
+  slides.forEach((s,i)=>{if(i!==n){s.el.classList.remove('on','back');s.el.innerHTML=''}s.btn.classList.toggle('active',i===n);s.btn.toggleAttribute('aria-current',i===n)});
+  cur=n;const s=slides[n];s.el.classList.toggle('back',back);s.el.scrollTop=0;mount(s);
+  $('#count').textContent=`${pad(n+1)} / ${pad(slides.length)}`;
+  $('#bar').style.width=((n+1)/slides.length*100)+'%';
+  $('#prev').disabled=n===0;$('#next').disabled=n===slides.length-1;
+  $('#n-title').textContent=s.title;$('#n-body').innerHTML=`<p>${s.note}</p>`;
+  if(!fromHash)try{history.replaceState(null,'','#'+s.id)}catch(_){}
+  s.btn.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-replay]'))mount(slides[cur])});
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+function notes(f){const o=f??!$('#notes').classList.contains('open');$('#notes').classList.toggle('open',o);$('#notes').setAttribute('aria-hidden',!o);$('#notes-toggle').setAttribute('aria-expanded',o)}
+$('#notes-toggle').onclick=()=>notes();$('#close-notes').onclick=()=>notes(false);
+$('#present').onclick=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch(_){}};
+$('#motion').onclick=()=>{const still=document.body.classList.toggle('still');$('#motion').setAttribute('aria-pressed',!still);$('#motion').textContent=still?'Hareketi başlat ▶':'Hareketi durdur Ⅱ'};
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='f'||e.key==='F')$('#present').click();
+  else if(e.key==='n'||e.key==='N')notes();
+  else if(e.key==='r'||e.key==='R')mount(slides[cur]);
+  else if(e.key==='Escape')notes(false);
+});
+let tx=null;
+stage.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+stage.addEventListener('touchend',e=>{if(tx==null)return;const d=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(d)>60)go(cur+(d<0?1:-1))});
+addEventListener('hashchange',()=>{const i=slides.findIndex(s=>s.id===location.hash.slice(1));if(i>=0)go(i,true)});
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(cur>=0)mount(slides[cur])},250)});
+
+/* Polen parçacıkları */
+(function(){
+  const c=$('#pollen'),x=c.getContext('2d');let W,H,ps=[];
+  const rs=()=>{W=c.width=innerWidth;H=c.height=innerHeight};rs();addEventListener('resize',rs);
+  const mk=()=>({x:Math.random()*W,y:H+10,r:Math.random()*1.8+.4,v:Math.random()*.5+.2,dx:(Math.random()-.5)*.3,a:Math.random()*.5+.2,ph:Math.random()*6});
+  for(let i=0;i<46;i++){const p=mk();p.y=Math.random()*H;ps.push(p)}
+  (function f(){
+    x.clearRect(0,0,W,H);
+    if(!document.body.classList.contains('still')&&!FAST&&!document.hidden)ps.forEach((p,i)=>{p.y-=p.v;p.x+=p.dx+Math.sin(p.ph+=.02)*.25;if(p.y<-10)ps[i]=mk()});
+    ps.forEach(p=>{x.beginPath();x.fillStyle=`rgba(79,143,47,${p.a*(p.y/H)+.05})`;x.arc(p.x,p.y,p.r,0,7);x.fill()});
+    requestAnimationFrame(f);
+  })();
+})();
+
+const start=slides.findIndex(s=>s.id===location.hash.slice(1));
+go(start>=0?start:0,true);
+</script>
+</body>
+</html>

@@ -50,7 +50,7 @@ const PESTS = [
   { latinName: "Tuta absoluta", commonName: "Domates güvesi", type: "insect" },
   { latinName: "Bemisia tabaci", commonName: "Beyaz sinek", type: "insect" },
   { latinName: "Phytophthora infestans", commonName: "Mildiyö", type: "fungus" },
-  { latinName: "Podosphaera xanthii", commonName: "Küllemе", type: "fungus" },
+  { latinName: "Podosphaera xanthii", commonName: "Külleme", type: "fungus" },
   { latinName: "Xanthomonas campestris", commonName: "Bakteriyel yaprak lekesi", type: "bacteria" },
   { latinName: "Tomato yellow leaf curl virus", commonName: "Yaprak kıvırcıklığı virüsü", type: "virus" },
 ] as const;
