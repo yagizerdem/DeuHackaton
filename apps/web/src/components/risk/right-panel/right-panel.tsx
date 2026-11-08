@@ -1,14 +1,16 @@
-import { ChartLineIcon, FlameIcon, XIcon } from "lucide-react";
+import { ChartLineIcon, FlameIcon, LeafIcon, XIcon } from "lucide-react";
 
 import { Button } from "@components/ui/button";
 import BurntAreaLocator from "@components/risk/right-panel/burnt-area-locator";
 import FireDangerChart from "@components/risk/right-panel/fire-danger-chart";
+import VegetationPanel from "@components/risk/right-panel/vegetation-panel";
 import { useRiskMap } from "@providers/risk-map-provider";
 import { cn } from "@/lib/utils";
 
 const PANELS = {
   chart: { title: "Fire danger chart", icon: ChartLineIcon },
   locator: { title: "Burnt area locator", icon: FlameIcon },
+  vegetation: { title: "Bitki örtüsü analizi", icon: LeafIcon },
 } as const;
 
 /** Slides in from the right edge of the map; `null` keeps it closed. */
@@ -53,6 +55,7 @@ export default function RightPanel() {
         <div className="flex-1 overflow-y-auto p-3">
           {panel === "chart" && <FireDangerChart />}
           {panel === "locator" && <BurntAreaLocator />}
+          {panel === "vegetation" && <VegetationPanel />}
         </div>
       </aside>
     </>

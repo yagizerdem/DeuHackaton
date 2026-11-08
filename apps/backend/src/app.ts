@@ -2,6 +2,7 @@ import express from "express";
 import { errorHandler } from "@middlewares/error-handler.js";
 import { authRouter } from "@routes/auth-route.js";
 import { planAnalysisRouter } from "@routes/plan-analysis-route.js";
+import { vegetationRouter } from "@routes/vegetation-route.js";
 import swaggerUi from "swagger-ui-express";
 import mongoose from "mongoose";
 import { swaggerSpec } from "@/docs/swagger.js";
@@ -42,6 +43,7 @@ app.get("/api-docs.json", (_req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/plan-analysis", planAnalysisRouter);
+app.use("/api/vegetation", vegetationRouter);
 
 app.use(errorHandler);
 
