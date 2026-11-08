@@ -39,8 +39,10 @@ services:
     networks:
       - mongodb_network
 
-  # RAG (Flask). Put the PDFs in rag/data. On every start the container indexes
-  # the pages that are not in the rag_chroma volume yet, then serves.
+  # RAG (Flask). The container only serves the existing index. To index the PDFs
+  # in rag/data (costs Gemini credits), then restart so the server sees the new pages:
+  #   docker compose run --rm rag python ingest.py && docker compose restart rag
+  # Set AUTO_INGEST=1 in rag/.env to index on every start instead.
   rag:
     build: ./rag
     container_name: rag
