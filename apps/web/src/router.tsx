@@ -3,6 +3,11 @@ import Home from "@pages/home-page";
 import RegisterPage from "@pages/auth/register-page";
 import LoginPage from "@pages/auth/login-page";
 import MapPage from "@pages/2dmap/map-page";
+import FarmLayout from "@/layouts/farm-layout";
+import PlantsPage from "@pages/farm/plants-page";
+import ParcelsPage from "@pages/farm/parcels-page";
+import RecordsPage from "@pages/farm/records-page";
+import TasksPage from "@pages/farm/tasks-page";
 import PlantProtectionAssistant from "@pages/plant-protection-assistant";
 
 const router = createBrowserRouter([
@@ -25,6 +30,15 @@ const router = createBrowserRouter([
   {
     path: "/2dmap",
     element: <MapPage />,
+  },
+  {
+    element: <FarmLayout />,
+    children: [
+      { path: "/plants", element: <PlantsPage /> },
+      { path: "/parcels", element: <ParcelsPage /> },
+      { path: "/records", element: <RecordsPage /> },
+      { path: "/tasks", element: <TasksPage /> },
+    ],
   },
 ]);
 

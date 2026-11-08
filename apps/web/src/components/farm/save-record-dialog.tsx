@@ -24,15 +24,18 @@ interface SaveRecordDialogProps {
 }
 
 // Saves an analysis result to the user's records. Only shown to logged in users.
-export default function SaveRecordDialog({ result, mode }: SaveRecordDialogProps) {
+export default function SaveRecordDialog(props: SaveRecordDialogProps) {
   const { user } = useAuth();
+  return user ? <SaveRecord {...props} /> : null;
+}
+
+// split from the wrapper so the plants query only runs for logged in users
+function SaveRecord({ result, mode }: SaveRecordDialogProps) {
   const [open, setOpen] = useState(false);
   const [plantId, setPlantId] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const plants = usePlants();
   const createRecord = useCreateAnalysisRecord();
-
-  if (!user) return null;
 
   async function save() {
     try {

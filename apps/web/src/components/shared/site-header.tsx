@@ -64,6 +64,14 @@ export default function SiteHeader() {
             >
               2D Map
             </Link>
+            {user && (
+              <Link
+                to="/plants"
+                className="font-stitch-body text-stitch-body-md font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                My Garden
+              </Link>
+            )}
           </nav>
         </div>
 

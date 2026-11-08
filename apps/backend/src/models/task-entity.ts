@@ -12,6 +12,8 @@ const schema = new mongoose.Schema(
     notes: { type: String, trim: true },
     dueDate: { type: Date, required: true },
     done: { type: Boolean, default: false },
+    // board column "doing"; only meaningful while done is false
+    inProgress: { type: Boolean, default: false },
     doneAt: { type: Date },
     repeat: {
       type: String,

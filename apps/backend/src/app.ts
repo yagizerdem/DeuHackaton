@@ -7,6 +7,7 @@ import { plantRouter } from "@routes/plant-route.js";
 import { parcelRouter } from "@routes/parcel-route.js";
 import { analysisRecordRouter } from "@routes/analysis-record-route.js";
 import { taskRouter } from "@routes/task-route.js";
+import { farmOverviewRouter } from "@routes/farm-overview-route.js";
 import swaggerUi from "swagger-ui-express";
 import mongoose from "mongoose";
 import { swaggerSpec } from "@/docs/swagger.js";
@@ -52,6 +53,7 @@ app.use("/api/plants", plantRouter);
 app.use("/api/parcels", parcelRouter);
 app.use("/api/analysis-records", analysisRecordRouter);
 app.use("/api/tasks", taskRouter);
+app.use("/api/farm", farmOverviewRouter);
 
 app.use(errorHandler);
 

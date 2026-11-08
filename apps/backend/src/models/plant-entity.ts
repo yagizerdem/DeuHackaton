@@ -11,6 +11,7 @@ const schema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     latinName: { type: String, trim: true },
     careNote: { type: String, trim: true },
+    tags: { type: [String], default: [] },
     location: {
       type: new mongoose.Schema(
         { lat: Number, lng: Number },
